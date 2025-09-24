@@ -204,6 +204,8 @@ export class UsuarioService {
     const usuario = await this.usuario
       .findOne({ _id: new Types.ObjectId(request.usuario.idUsuario) })
       .select('rol');
-    return {};
+
+      
+    return usuario;
   }
 }
