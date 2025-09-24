@@ -40,30 +40,126 @@ export interface VentaApiI {
   descuentoPromosion: number;
 
   descuentoPromosion2: number;
-
-  precio:string
-  precioTotal:number
-  medioPar:boolean
-  receta:RecetaResponseI
+  tipoConversion: string;
+  precio: string;
+  precioTotal: number;
+  medioPar: boolean;
+  receta: RecetaResponseI;
 }
 
-
-
-export interface AnularVentaMiaI{
-    id_venta:string
-    estado:string,
-    estadoTracking:string
-    fechaAprobacionAnulacion:string
+export interface AnularVentaMiaI {
+  id_venta: string;
+  estado: string;
+  estadoTracking: string;
+  fechaAprobacionAnulacion: string;
 }
-export interface FinalizarVentaMia{
-    id_venta:string
-    estado:string,
-    estadoTracking:string
-    flaVenta:string
-    fecha_finalizacion:string
+export interface FinalizarVentaMia {
+  id_venta: string;
+  estado: string;
+  estadoTracking: string;
+  flaVenta: string;
+  fecha_finalizacion: string;
 }
 
 export interface RecetaResponseI {
+  codigoMia: string;
+  medico: string;
+  codigoReceta: string;
+  especialidad: string;
+  esfericoLejosD: string;
+  esfericoLejosI: string;
+  esfericoCercaD: string;
+  esfericoCercaI: string;
+
+  cilindricoLejosD: string;
+  cilindricoLejosI: string;
+  cilindricoCercaD: string;
+  cilindricoCercaI: string;
+
+  ejeLejosD: string;
+  ejeLejosI: string;
+  ejeCercaD: string;
+  ejeCercaI: string;
+
+  altura: string;
+
+  distanciaLejosD: string;
+  distanciaLejosI: string;
+  distanciaCercaD: string;
+  distanciaCercaI: string;
+
+  dpLejos: string;
+  dpCerca: string;
+
+  addLejos: string;
+  addCerca: string;
+
+  fecha: string;
+
+  observacion: string;
+  tipo: string;
+  tipoLenteTexto: string;
+  tipoCreacion: string;
+
+  recomenacionLentePrincipal: string;
+  recomenacionLenteComplementario: string;
+  recomendacionProteccionDeSol: string;
+  recomendacionLenteDeContacto: string;
+
+  lcEsferaOd: string;
+  lcCilindroOd: string;
+  lcEjeOd: string;
+  lcCurvaBaseOd: string;
+  lcDiametroOd: string;
+
+  lcEsferaOi: string;
+  lcCilindroOi: string;
+  lcEjeOi: string;
+  lcCurvaBaseOi: string;
+  lcDiametroOi: string;
+}
+
+export interface CotizacionMIaI {
+  codigo: string;
+  fecha: string;
+  total1: number;
+  total2: number;
+  descripcion1: string;
+  descripcion2: string;
+  detalleReceta1: RecetaContizacionResponseI[];
+  detalleReceta2: RecetaContizacionResponseI[];
+  detalle: DetalleProductoCotizacionI[];
+  asesor: string;
+  sucursal: string;
+  motivoNoCompra: string;
+  medico: string;
+  especialidad: string;
+  id_venta: string;
+  recetaVenta: number;
+}
+export interface DetalleProductoCotizacionI {
+  marca: string;
+  rubro: string;
+  cantidad: number;
+  importe: number;
+  descripcion: string;
+  codigoProduto: string;
+  categoria: string;
+  tipoProducto: string;
+  color: string;
+  codigoQR: string;
+  tipoMontura: string;
+}
+
+export interface RecetaContizacionResponseI {
+  material: string;
+  colorLente: string;
+  tipoLente: string;
+  tipoColorLente: string;
+  marcaLente: string;
+  tratamiento: string;
+  rango: string;
+  importe: number;
   codigoMia: string;
   medico: string;
   codigoReceta: string;

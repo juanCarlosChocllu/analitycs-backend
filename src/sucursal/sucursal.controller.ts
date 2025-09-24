@@ -16,7 +16,7 @@ import { ValidacionIdPipe } from 'src/core-app/utils/validacion-id/validacion-id
 export class SucursalController {
   constructor(private readonly sucursalService: SucursalService) {}
 
-  @Get('sucursalExcel/:id')
+  @Get('sucursal/:id')
   async sucursalExcel(@Param('id', ValidacionIdPipe) id: string) {
     return await this.sucursalService.sucursalListaEmpresas(new Types.ObjectId(id));
   }

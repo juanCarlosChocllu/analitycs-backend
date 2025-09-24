@@ -8,6 +8,10 @@ export class AppConfigService {
   get databaseUrl(): string {
     return this.configService.get<string>('DATABASE')||"";
   }
+   get getRutaFronted(): string {
+    return this.configService.get<string>('RUTAFRONTEND')||"";
+  }
+
 
   get port(): string {
     return this.configService.get<string>('PORT') || "3000";

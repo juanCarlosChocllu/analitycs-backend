@@ -22,15 +22,23 @@ import { MarcaLenteModule } from './marca-lente/marca-lente.module';
 import { TratamientoModule } from './tratamiento/tratamiento.module';
 import { TipoColorModule } from './tipo-color/tipo-color.module';
 import { ColorLenteModule } from './color-lente/color-lente.module';
+import { AlmacenModule } from './almacen/almacen.module';
+import { CotizacionModule } from './cotizacion/cotizacion.module';
+import { MetasSucursalModule } from './metas-sucursal/metas-sucursal.module';
+import { RendimientoDiarioModule } from './rendimiento-diario/rendimiento-diario.module';
+import { UsuarioModule } from './usuario/usuario.module';
+import { AutenticacionModule } from './autenticacion/autenticacion.module';
+import { APP_GUARD } from '@nestjs/core';
+import { TokenGuard } from './autenticacion/guards/token/token.guard';
 
 @Module({
   imports: [
-   MongooseModule.forRootAsync({
-      imports:[CoreAppModule],
-      inject:[AppConfigService],
-      useFactory:(config:AppConfigService)=>({
-        uri:    config.databaseUrl
-      })
+    MongooseModule.forRootAsync({
+      imports: [CoreAppModule],
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService) => ({
+        uri: config.databaseUrl,
+      }),
     }),
     VentaModule,
     AsesorModule,
@@ -53,10 +61,18 @@ import { ColorLenteModule } from './color-lente/color-lente.module';
     MarcaLenteModule,
     TratamientoModule,
     TipoColorModule,
-    ColorLenteModule
-
+    ColorLenteModule,
+    AlmacenModule,
+    CotizacionModule,
+    MetasSucursalModule,
+    RendimientoDiarioModule,
+    UsuarioModule,
+    AutenticacionModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [ {
+      provide:APP_GUARD,
+      useClass:TokenGuard
+    }],
 })
 export class AppModule {}

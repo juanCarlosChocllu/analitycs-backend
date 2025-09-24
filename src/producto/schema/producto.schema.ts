@@ -22,3 +22,4 @@ export class Producto  extends BaseSchema{
 
 }
 export const  productoSchema = SchemaFactory.createForClass(Producto)
+productoSchema.index({codigoMia:1})

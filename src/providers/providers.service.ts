@@ -5,12 +5,12 @@ import { HttpService } from '@nestjs/axios';
 import { DescargarProviderDto } from './dto/DescargarProviderDto';
 import { firstValueFrom } from 'rxjs';
 import { AppConfigService } from 'src/core-app/config/appConfigService';
-import { VentaApiI } from './interface/ApiMia';
+import { CotizacionMIaI, VentaApiI } from './interface/ApiMia';
 import { VentaI, VentaIOpcional } from 'src/venta/interface/venta';
 import { SucursalService } from 'src/sucursal/sucursal.service';
 import { TipoVentaService } from 'src/tipo-venta/tipo-venta.service';
 import { AsesorService } from 'src/asesor/asesor.service';
-import { VentaService } from 'src/venta/venta.service';
+import { VentaService } from 'src/venta/service/venta.service';
 import { Types } from 'mongoose';
 import { detalleVentaI } from 'src/venta/interface/detalleVenta';
 import { ProductoE } from 'src/core-app/enum/coreEnum';
@@ -22,6 +22,19 @@ import { MarcaLenteService } from 'src/marca-lente/marca-lente.service';
 import { RangosService } from 'src/rangos/rangos.service';
 import { TipoColorService } from 'src/tipo-color/tipo-color.service';
 import { TipoLenteService } from 'src/tipo-lente/tipo-lente.service';
+import { horaUtc } from 'src/core-app/utils/coreAppUtils';
+import { recetaI } from 'src/receta/interface/receta';
+import { RecetaService } from 'src/receta/receta.service';
+import { MedicoService } from 'src/medico/medico.service';
+import { StockMia } from './interface/stockMia';
+import { AxiosResponse } from 'axios';
+import { StockService } from 'src/stock/stock.service';
+import { CotizacionService } from 'src/cotizacion/cotizacion.service';
+import {
+  CotizacionI,
+  DetalleCotizacionI,
+} from 'src/cotizacion/interface/cotizacion';
+import { cp } from 'fs';
 
 @Injectable()
 export class ProvidersService {
@@ -40,6 +53,10 @@ export class ProvidersService {
     private readonly rangoService: RangosService,
     private readonly TipoColorService: TipoColorService,
     private readonly tipoLenteService: TipoLenteService,
+    private readonly recetaService: RecetaService,
+    private readonly medicoService: MedicoService,
+    private readonly stockService: StockService,
+    private readonly cotizacionService: CotizacionService,
   ) {}
   async descargarVentasMia(createProviderDto: DescargarProviderDto) {
     try {
@@ -61,10 +78,46 @@ export class ProvidersService {
     }
   }
 
+  async descargarCotizacionesMia(createProviderDto: DescargarProviderDto) {
+    try {
+      const data: DescargarProviderDto = {
+        fechaFin: createProviderDto.fechaFin,
+        fechaInicio: createProviderDto.fechaInicio,
+        token: this.appConfigService.tokenMia,
+      };
+      const ventas = await firstValueFrom(
+        this.httpService.post<CotizacionMIaI[]>(
+          `${this.appConfigService.apiMia}/api/cotizaciones/v1`,
+          data,
+        ),
+      );
+
+      return ventas.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async descargarStockMia(producto: string[]): Promise<StockMia[]> {
+    try {
+      const data = {
+        producto: producto,
+        token: this.appConfigService.tokenMia,
+      };
+      const stock: AxiosResponse<StockMia[]> = await firstValueFrom(
+        this.httpService.post(
+          `${this.appConfigService.apiMia}/api/stock`,
+          data,
+        ),
+      );
+      return stock.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async guardardataVenta(createProviderDto: DescargarProviderDto) {
     try {
-      console.log('descargando venta');
-
       let ventaGuardar: VentaIOpcional = {};
       const ventas: VentaApiI[] =
         await this.descargarVentasMia(createProviderDto);
@@ -72,24 +125,27 @@ export class ProvidersService {
         const sucursal = await this.sucursalService.guardarSucursalVenta(
           data.local,
         );
-        console.log(sucursal);
-
         if (sucursal) {
-          const [asesor, tipoVenta] = await Promise.all([
+          const [asesor, tipoVenta, medico] = await Promise.all([
             this.asesorService.guardarAsesor(data.nombre_vendedor),
             this.tipoVentaService.guardarTipoVenta(data.tipoVenta),
+            this.medicoService.guardarMedico(data.medico),
           ]);
+          const detalleMedico = await this.medicoService.guardarDetalleMedico(
+            medico._id,
+            data.especialidad,
+            // sucursal._id
+          );
           const detalleAsesor = await this.asesorService.guardarDetalleAsesor(
             asesor._id,
             sucursal._id,
           );
-
           ventaGuardar = {
             detalleAsesor: detalleAsesor._id,
             comisiona: data.comisiona,
             descuento: data.descuentoFicha,
             id_venta: data.idVenta,
-            montoTotal: data.monto_total,
+            montoTotal: data.precioTotal,
             sucursal: sucursal._id,
             tipoVenta: tipoVenta._id,
             estadoTracking: data.estadoTracking,
@@ -100,19 +156,25 @@ export class ProvidersService {
             tipo2: data.tipo2,
             tipoDescuento: data.tipoDescuento,
             flagVenta: data.flag,
-            montoTotalDescuento: data.precioTotal,
-            precio: tipoVenta._id, // se veridica en cada venta
-
-            fechaVenta: new Date(data.fecha),
+            montoTotalDescuento: data.monto_total,
+            precio: tipoVenta._id,
+            cotizacion: data.cotizacion,
+            codigoConversion: data.numeroCotizacion,
+            tipoConversion: data.tipoConversion,
+            fechaVenta: horaUtc(data.fecha),
+            detalleMedico: detalleMedico._id,
             ...(data.fecha_finalizacion && {
-              fechaFinalizacion: new Date(data.fecha_finalizacion),
+              fechaFinalizacion: horaUtc(data.fecha_finalizacion),
             }),
           };
           const venta = await this.ventaService.guardarVenta(ventaGuardar);
-          console.log(venta);
-
           if (data.rubro === ProductoE.lente) {
-            //await this.guardarLente(data, venta._id);
+            await this.guardarLente(
+              data,
+              sucursal._id,
+              venta._id,
+              detalleMedico._id,
+            );
           } else if (
             data.rubro === ProductoE.gafa ||
             data.rubro === ProductoE.lenteDeContacto ||
@@ -176,8 +238,12 @@ export class ProvidersService {
     await this.ventaService.guardarDetalleVenta(detalle);
   }
 
-  private async guardarLente(data: VentaApiI, venta:Types.ObjectId) {
-  
+  private async guardarLente(
+    data: VentaApiI,
+    sucursal: Types.ObjectId,
+    venta: Types.ObjectId,
+    detalleMedico: Types.ObjectId,
+  ) {
     const [
       coloLente,
       tipoLente,
@@ -195,5 +261,207 @@ export class ProvidersService {
       this.tratamientoService.guardarTratamiento(data.atributo6),
       this.rangoService.guardarRango(data.atributo7),
     ]);
+
+    const nuevaReceta: recetaI = {
+      ...data.receta,
+      fecha: horaUtc(data.receta.fecha),
+      detalleMedico: detalleMedico,
+      colorLente: coloLente._id,
+      marcaLente: marca._id,
+      material: material._id,
+      rango: rango._id,
+      tipoColor: tipoColorLente._id,
+      tipoLente: tipoLente._id,
+      tratamiento: tratamiento._id,
+      sucursal: new Types.ObjectId(sucursal),
+    };
+    const receta = await this.recetaService.regitrarReceta(nuevaReceta);
+    const detalle: detalleVentaI = {
+      cantidad: 1,
+      importe: data.importe,
+      rubro: data.rubro,
+      receta: receta._id,
+      descripcion: data.descripcionProducto,
+      medioPar: data.medioPar,
+      venta: venta,
+    };
+    await this.ventaService.guardarDetalleVenta(detalle);
+  }
+
+  async descargarStockProductos(descargarProviderDto: DescargarProviderDto) {
+    const ventas =
+      await this.ventaService.buscarProductoDeVenta(descargarProviderDto);
+
+    const stock = await this.descargarStockMia(
+      ventas.map((item) => item.codigoMia),
+    );
+    await this.stockService.guardarStockMia(stock, ventas);
+  }
+
+  async descargarCotizacion(descargarProviderDto: DescargarProviderDto) {
+    const cotizaciones =
+      await this.descargarCotizacionesMia(descargarProviderDto);
+
+    for (const cot of cotizaciones) {
+      const [sucursal, asesor, medico] = await Promise.all([
+        this.sucursalService.guardarSucursalVenta(cot.sucursal),
+        this.asesorService.guardarAsesor(cot.asesor.toUpperCase()),
+        this.medicoService.guardarMedico(cot.medico),
+      ]);
+      const detalleAsesor = await this.asesorService.guardarDetalleAsesor(
+        asesor._id,
+        sucursal._id,
+      );
+      const detalleMedico = await this.medicoService.guardarDetalleMedico(
+        medico.id,
+        cot.especialidad,
+      );
+      const dataCotizacion: CotizacionI = {
+        codigo: cot.codigo,
+        detalleAsesor: detalleAsesor._id,
+        fechaCotizacion: horaUtc(cot.fecha),
+        sucursal: sucursal._id,
+        total1: cot.total1 ? cot.total1 : 0,
+        total2: cot.total2 ? cot.total2 : 0,
+        noCompra: cot.motivoNoCompra,
+        detalleMedico: detalleMedico._id,
+        ...(cot.id_venta && { id_venta: cot.id_venta }),
+        ...(cot.recetaVenta && { recetaVenta: cot.recetaVenta }),
+      };
+      const cotizacion =
+        await this.cotizacionService.guardarCotizacion(dataCotizacion);
+      if (cot.detalle.length > 0) {
+        for (const p of cot.detalle) {
+          const producto = await this.productoService.crearProducto(
+            p.codigoProduto,
+            p.marca,
+            p.rubro,
+            p.tipoProducto,
+            p.codigoQR,
+            p.color,
+          );
+          const detalle: DetalleCotizacionI = {
+            cantidad: p.cantidad,
+            cotizacion: cotizacion._id,
+            descripcion: p.descripcion,
+            importe: p.importe,
+            rubro: p.rubro,
+            tipo: p.rubro,
+            producto: producto._id,
+          };
+          await this.cotizacionService.guardaDetalleCotizacion(detalle);
+        }
+      }
+
+      if (cot.detalleReceta2.length > 0) {
+        const [
+          coloLente,
+          tipoLente,
+          material,
+          tipoColorLente,
+          marca,
+          tratamiento,
+          rango,
+        ] = await Promise.all([
+          this.colorLenteService.guardarColorLente(
+            cot.detalleReceta1[0].colorLente,
+          ),
+          this.tipoLenteService.guardarTipoLente(
+            cot.detalleReceta1[0].tipoLente,
+          ),
+          this.materialService.guardarMaterial(cot.detalleReceta1[0].material),
+          this.TipoColorService.guardarTipoColor(
+            cot.detalleReceta1[0].tipoColorLente,
+          ),
+          this.marcaLenteService.guardarMarcaLente(
+            cot.detalleReceta1[0].marcaLente,
+          ),
+          this.tratamientoService.guardarTratamiento(
+            cot.detalleReceta1[0].tratamiento,
+          ),
+          this.rangoService.guardarRango(cot.detalleReceta1[0].rango),
+        ]);
+
+        const nuevaReceta: recetaI = {
+          ...cot.detalleReceta1[0],
+          fecha: horaUtc(cot.detalleReceta1[0].fecha),
+          detalleMedico: detalleMedico._id,
+          colorLente: coloLente._id,
+          marcaLente: marca._id,
+          material: material._id,
+          rango: rango._id,
+          tipoColor: tipoColorLente._id,
+          tipoLente: tipoLente._id,
+          tratamiento: tratamiento._id,
+          sucursal: new Types.ObjectId(sucursal._id),
+        };
+        const receta = await this.recetaService.regitrarReceta(nuevaReceta);
+        const detalle: DetalleCotizacionI = {
+          cantidad: 1,
+          cotizacion: cotizacion._id,
+          descripcion: cot.descripcion1,
+          importe: cot.detalleReceta1[0].importe,
+          rubro: 'LENTE',
+          tipo: 'LENTE 1',
+          receta: receta._id,
+        };
+        await this.cotizacionService.guardaDetalleCotizacion(detalle);
+      }
+
+      if (cot.detalleReceta2.length > 0) {
+        const [
+          colorLente,
+          tipoLente,
+          material,
+          tipoColorLente,
+          marca,
+          tratamiento,
+          rango,
+        ] = await Promise.all([
+          this.colorLenteService.guardarColorLente(
+            cot.detalleReceta2[0].colorLente,
+          ),
+          this.tipoLenteService.guardarTipoLente(
+            cot.detalleReceta2[0].tipoLente,
+          ),
+          this.materialService.guardarMaterial(cot.detalleReceta2[0].material),
+          this.TipoColorService.guardarTipoColor(
+            cot.detalleReceta2[0].tipoColorLente,
+          ),
+          this.marcaLenteService.guardarMarcaLente(
+            cot.detalleReceta2[0].marcaLente,
+          ),
+          this.tratamientoService.guardarTratamiento(
+            cot.detalleReceta2[0].tratamiento,
+          ),
+          this.rangoService.guardarRango(cot.detalleReceta2[0].rango),
+        ]);
+
+        const nuevaReceta: recetaI = {
+          ...cot.detalleReceta2[0],
+          fecha: horaUtc(cot.detalleReceta2[0].fecha),
+          detalleMedico: detalleMedico._id,
+          colorLente: colorLente._id,
+          marcaLente: marca._id,
+          material: material._id,
+          rango: rango._id,
+          tipoColor: tipoColorLente._id,
+          tipoLente: tipoLente._id,
+          tratamiento: tratamiento._id,
+          sucursal: new Types.ObjectId(sucursal._id),
+        };
+        const receta = await this.recetaService.regitrarReceta(nuevaReceta);
+        const detalle: DetalleCotizacionI = {
+          cantidad: 1,
+          cotizacion: cotizacion._id,
+          descripcion: cot.descripcion2,
+          importe: cot.detalleReceta2[0].importe,
+          rubro: 'LENTE',
+          tipo: 'LENTE 2',
+          receta: receta._id,
+        };
+        await this.cotizacionService.guardaDetalleCotizacion(detalle);
+      }
+    }
   }
 }

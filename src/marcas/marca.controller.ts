@@ -12,10 +12,8 @@ export class MarcaController {
   }
   @Post('categoria')
   @HttpCode(HttpStatusCode.Ok)
-
   asignarCategoriaMarca(@Body() asignarCategoriaDto: AsignarCategoriaDto) {
-    console.log("HOLA");
-    
+ 
     return this.marcaService.asignarCategoriaMarca(asignarCategoriaDto);
   }
 }

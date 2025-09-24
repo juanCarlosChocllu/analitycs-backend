@@ -1,16 +1,17 @@
-import { Prop } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { basename } from 'path';
 import { BaseSchema } from 'src/core-app/schema/baseSchema';
 
+@Schema({collection:"Receta"})
 export class Receta extends BaseSchema {
   @Prop()
   codigoMia: string;
   
   @Prop({ type: Types.ObjectId, ref: 'Sucursal' })
   sucursal: Types.ObjectId;
-  @Prop({ type: Types.ObjectId, ref: 'Medico' })
-  medico: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'DetalleMedico' })
+  detalleMedico: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Material' })
   material: Types.ObjectId;
@@ -116,3 +117,4 @@ export class Receta extends BaseSchema {
   @Prop()
   lcDiametroOi: string;
 }
+export const recetaSchema = SchemaFactory.createForClass(Receta);

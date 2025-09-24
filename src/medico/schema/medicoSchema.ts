@@ -4,7 +4,7 @@ import { BaseSchema } from 'src/core-app/schema/baseSchema';
 @Schema({ collection: 'Medico' })
 export class Medico extends BaseSchema {
   @Prop()
-  nombreCompleto: string;
+  nombre: string;
   @Prop()
   especialidad: string;
 }

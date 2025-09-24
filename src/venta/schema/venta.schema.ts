@@ -19,12 +19,15 @@ export class Venta extends BaseSchema {
 
   @Prop()
   comisiona: boolean;
-  
+
   @Prop({ type: Types.ObjectId, ref: 'Sucursal' })
   sucursal: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'TipoVenta' })
   tipoVenta: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'DetalleMedico' })
+  detalleMedico: Types.ObjectId;
 
   @Prop()
   tipo: string;
@@ -56,12 +59,28 @@ export class Venta extends BaseSchema {
   @Prop()
   fechaFinalizacion: Date;
 
-  @Prop()
+  @Prop({ type: Date })
   fechaAnulacion: Date;
 
   @Prop()
   estadoTracking: string;
+
   @Prop()
   flagVenta: string;
+
+  @Prop({ type: String })
+  tipoConversion: string;
+
+  @Prop({ type: String })
+  codigoConversion: string;
+
+  @Prop({ type: Boolean })
+  cotizacion: boolean;
 }
 export const ventaSchema = SchemaFactory.createForClass(Venta);
+ventaSchema.index({id_venta:1})
+ventaSchema.index({fechaVenta:1, estadoTracking:1})
+
+
+ventaSchema.index({ sucursal: 1, fechaVenta: 1, tipoVenta: 1, comisiona: 1 });
+ventaSchema.index({ sucursal: 1, fechaFinalizacion: 1, tipoVenta: 1, comisiona: 1 });

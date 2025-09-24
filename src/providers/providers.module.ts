@@ -15,6 +15,10 @@ import { MarcaLenteModule } from 'src/marca-lente/marca-lente.module';
 import { TratamientoModule } from 'src/tratamiento/tratamiento.module';
 import { ColorLenteModule } from 'src/color-lente/color-lente.module';
 import { TipoColorModule } from 'src/tipo-color/tipo-color.module';
+import { RecetaModule } from 'src/receta/receta.module';
+import { MedicoModule } from 'src/medico/medico.module';
+import { StockModule } from 'src/stock/stock.module';
+import { CotizacionModule } from 'src/cotizacion/cotizacion.module';
 
 @Module({
   imports: [
@@ -32,6 +36,10 @@ import { TipoColorModule } from 'src/tipo-color/tipo-color.module';
     TratamientoModule,
     TipoColorModule,
     ColorLenteModule,
+    RecetaModule,
+    MedicoModule,
+    StockModule,
+    CotizacionModule
   ],
   controllers: [ProvidersController],
   providers: [ProvidersService],

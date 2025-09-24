@@ -16,7 +16,11 @@ export class DetalleVenta extends BaseSchema {
   receta: Types.ObjectId;
   @Prop()
   descripcion: string;
-   @Prop()
+  @Prop()
+  medioPar: boolean;
+  @Prop()
   cantidad: number;
 }
 export const detalleVentaSchema = SchemaFactory.createForClass(DetalleVenta);
+detalleVentaSchema.index({rubro:1})
+detalleVentaSchema.index({venta:1})

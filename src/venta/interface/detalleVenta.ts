@@ -10,4 +10,5 @@ export interface detalleVentaI {
   receta?: Types.ObjectId;
   venta: Types.ObjectId;
   descripcion: string;
+  medioPar?: boolean;
 }

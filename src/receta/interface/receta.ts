@@ -2,8 +2,8 @@ import { Types } from 'mongoose';
 
 export interface recetaI {
   codigoMia: string;
-
-  medico: Types.ObjectId;
+  sucursal:Types.ObjectId
+  detalleMedico: Types.ObjectId;
 
   material: Types.ObjectId;
 

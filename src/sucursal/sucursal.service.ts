@@ -29,10 +29,32 @@ export class SucursalService {
     return sucursales
    }
    public async  listarSucursalId(id:Types.ObjectId){
-    const sucursal = await this.sucursal.findById(id)
-    return sucursal
+    const sucursal = await this.sucursal.aggregate([
+      {
+        $match:{
+          _id:new Types.ObjectId(id)
+        }
+      },
+      {
+        $lookup:{
+          from:'Empresa',
+          foreignField:'_id',
+          localField:'empresa',
+          as:'empresa'
+        }
+      },
+      {
+        $project:{
+          nombre:1,
+          empresa:{ $arrayElemAt: [ "$empresa.nombre", 0 ] }
+        }
+      }
+    ])
+    return sucursal[0]
 
    }
+
+  
    
    async sucursalListaEmpresas(id: Types.ObjectId):Promise<SucursalI[]>{
     const suscursales:SucursalI[] = await this.sucursal.find({
@@ -41,12 +63,17 @@ export class SucursalService {
     return suscursales;
   }
 
+
+
+
   async sucursalListaEmpresaOne(id: Types.ObjectId){
     const suscursales = await this.sucursal.findOne({
       empresa: new Types.ObjectId(id),
     });
     return suscursales;
   }
+
+
 
 
   
@@ -140,5 +167,8 @@ export class SucursalService {
     }
 
     return sucursal;
+  }
+    buscarSucursalPorId(id:Types.ObjectId){
+    return this.sucursal.findOne({_id:new Types.ObjectId(id)})
   }
 }
