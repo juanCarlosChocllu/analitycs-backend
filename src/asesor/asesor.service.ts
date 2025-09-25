@@ -116,5 +116,4 @@ export class AsesorService {
     return sucursales
   }
 
-  
 }

@@ -30,6 +30,7 @@ import { UsuarioModule } from './usuario/usuario.module';
 import { AutenticacionModule } from './autenticacion/autenticacion.module';
 import { APP_GUARD } from '@nestjs/core';
 import { TokenGuard } from './autenticacion/guards/token/token.guard';
+import { DiasModule } from './dias/dias.module';
 
 @Module({
   imports: [
@@ -68,11 +69,12 @@ import { TokenGuard } from './autenticacion/guards/token/token.guard';
     RendimientoDiarioModule,
     UsuarioModule,
     AutenticacionModule,
+    DiasModule
   ],
   controllers: [],
-  providers: [ {
+  providers: [ /*{
       provide:APP_GUARD,
       useClass:TokenGuard
-    }],
+    }*/],
 })
 export class AppModule {}

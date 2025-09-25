@@ -114,4 +114,11 @@ export class CotizacionService {
     
     return detalle.length;
   }
+  
+  contarCotizaciones (sucursal:Types.ObjectId, fechaInicio:Date, fechaFin:Date ){
+    return this.cotizacion.countDocuments({sucursal:new  Types.ObjectId(sucursal), fechaCotizacion:{
+      $gte:fechaInicio,
+      $lte:fechaFin
+    }})
+  }
 }

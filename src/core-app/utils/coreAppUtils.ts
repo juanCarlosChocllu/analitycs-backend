@@ -1,3 +1,4 @@
+ import { eachDayOfInterval, isSunday } from 'date-fns';
  export function  horaUtc(fecha: string) {
     const fechaDate = new Date(fecha);
     fechaDate.setHours(fechaDate.getHours() - 4);
@@ -16,4 +17,55 @@ export function skip (pagina:number, limite:number) {
 }
 export function calcularPaginas(countDocuments: number, limite: number): number {
   return Math.ceil(countDocuments / limite);
+}
+
+ export function cantidadDias(fechaInicio: Date, fechaFin: Date): Date[] {
+    const fecha1 = new Date(fechaInicio);
+    fecha1.setUTCDate(fecha1.getUTCDate() + 1);
+    const fecha2 = new Date(fechaFin);
+    fecha2.setUTCDate(fecha2.getUTCDate() + 1);
+    const dias = eachDayOfInterval({ start: fecha1, end: fecha2 });
+    return dias;
+  }
+
+  export function reglaDeTresSimple(diasComerciales: number, diasHabiles: number): number {
+    if (diasComerciales <= 0 || diasHabiles <= 0) {
+      return 0;
+    }
+    const indice = (diasHabiles * 100) / diasComerciales;
+    return Math.round(indice);
+  }
+
+  export function cantidadDomingos(fechaInicio: Date, fechaFin: Date) {
+    const fecha1 = new Date(fechaInicio);
+    fecha1.setUTCDate(fecha1.getUTCDate() + 1);
+    const fecha2 = new Date(fechaFin);
+    fecha2.setUTCDate(fecha2.getUTCDate() + 1);
+    const dias = eachDayOfInterval({ start: fecha1, end: fecha2 });
+    const domingos = dias.filter((dia) => isSunday(dia));
+    return domingos.length;
+  }
+
+  export function calcularPorcentaje(cantidad:number, total:number):number{
+      if(cantidad <= 0  || total <= 0){
+        return 0
+      }
+      const porcentaje = (cantidad / total) * 100;
+    
+      
+      return Math.round(porcentaje)
+
+}
+
+export function ticketPromedio(totalVenta: number, cantidadTotaVenta: number) {
+    const tkPromedio = totalVenta / cantidadTotaVenta;
+    return tkPromedio ? parseFloat(tkPromedio.toFixed(2)) : 0;
+  }
+
+  export function diasHAbiles(fechaInicio: Date, fechaFin: Date) {
+
+  const dias = eachDayOfInterval({ start: fechaInicio, end: fechaFin });
+  const diasHAbiles = dias.filter((dia) => !isSunday(dia));
+
+  return diasHAbiles.length;
 }
