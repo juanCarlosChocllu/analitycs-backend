@@ -14,22 +14,43 @@ import { VentaRendimientoDiarioService } from './service/ventaRendimientoDiario.
 import { MetasSucursalModule } from 'src/metas-sucursal/metas-sucursal.module';
 import { AsesorModule } from 'src/asesor/asesor.module';
 import { RendimientoDiarioModule } from 'src/rendimiento-diario/rendimiento-diario.module';
+import { VentaMestasSucursalController } from './controller/ventaMetas.controller';
+import { VentaMetasService } from './service/ventaMentas.service';
+import { DiasModule } from 'src/dias/dias.module';
+import { VentaMedicosService } from './service/ventaMedicos.service';
+import { VentaLentService } from './service/ventaLente.service';
+import { VentaLenteController } from './controller/ventaLente.controller';
+import { VentaMedicosController } from './controller/ventaMedicos.controller';
 
 @Module({
-    imports: [
-      StockModule,
-      SucursalModule,
-      CotizacionModule,
-       MetasSucursalModule,
-       AsesorModule,
-       RendimientoDiarioModule,
-      MongooseModule.forFeature(
-        [{ name: Venta.name, schema: ventaSchema },{ name: DetalleVenta.name, schema: detalleVentaSchema }],
-      
-      ),
-    ],
-  controllers: [VentaController, VentaProductoController, ],
-  providers: [VentaService, VentaProductoService, VentaRendimientoDiarioService],
-  exports:[VentaService, VentaRendimientoDiarioService]
+  imports: [
+    StockModule,
+    SucursalModule,
+    CotizacionModule,
+    MetasSucursalModule,
+    AsesorModule,
+    RendimientoDiarioModule,
+    DiasModule,
+    MongooseModule.forFeature([
+      { name: Venta.name, schema: ventaSchema },
+      { name: DetalleVenta.name, schema: detalleVentaSchema },
+    ]),
+  ],
+  controllers: [
+    VentaController,
+    VentaProductoController,
+    VentaMestasSucursalController,
+    VentaLenteController,
+    VentaMedicosController
+  ],
+  providers: [
+    VentaService,
+    VentaProductoService,
+    VentaRendimientoDiarioService,
+    VentaMetasService,
+    VentaMedicosService,
+    VentaLentService
+  ],
+  exports: [VentaService, VentaRendimientoDiarioService],
 })
 export class VentaModule {}

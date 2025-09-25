@@ -4,8 +4,9 @@ import { BuscadorRendimientoDiarioDto } from "src/rendimiento-diario/dto/Buscard
 import { Types } from "mongoose";
 import { FiltroVentaI } from "../interface/venta";
 import { FlagVentaE } from "../enum/ventaEnum";
+import { BuscadorVentaDto } from "../dto/BuscadorVenta.dto";
 
-export function filtradorVenta(filtro: BuscadorRendimientoDiarioDto) {
+export function filtradorVenta(filtro: BuscadorRendimientoDiarioDto | BuscadorVentaDto) {
   let filtrador: FiltroVentaI = {
    estadoTracking:{$ne:'ANULADO'}
   };

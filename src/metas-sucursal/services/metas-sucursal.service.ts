@@ -179,14 +179,13 @@ export class MetasSucursalService {
 
   async listarMetasSucursal(
     sucursal: Types.ObjectId,
-    fechaInicio: string,
-    fechaFin: string,
+    fechaInicio: Date,
   ){
-    const {f1,f2} =formaterFechaHora(fechaInicio, fechaFin)    
+  
     const meta = await this.metasSucursal.findOne({
       sucursal: new Types.ObjectId(sucursal),
       flag: Flag.nuevo,
-      fechaInicio:f1
+      fechaInicio:fechaInicio
     });
 
     return meta;
