@@ -2,22 +2,22 @@ import { Types } from 'mongoose';
 
 export interface recetaI {
   codigoMia: string;
-  sucursal:Types.ObjectId
+  sucursal?:Types.ObjectId
   detalleMedico: Types.ObjectId;
 
-  material: Types.ObjectId;
+  material?: Types.ObjectId;
 
-  tratamiento: Types.ObjectId;
+  tratamiento?: Types.ObjectId;
 
-  tipoLente: Types.ObjectId;
+  tipoLente?: Types.ObjectId;
 
-  tipoColor: Types.ObjectId;
+  tipoColor?: Types.ObjectId;
 
-  colorLente: Types.ObjectId;
+  colorLente?: Types.ObjectId;
 
-  rango: Types.ObjectId;
+  rango?: Types.ObjectId;
 
-  marcaLente: Types.ObjectId;
+  marcaLente?: Types.ObjectId;
 
   codigoReceta: string;
 
@@ -100,4 +100,16 @@ export interface recetaI {
   lcCurvaBaseOi: string;
 
   lcDiametroOi: string;
+}
+export interface RecetaMedicoI {
+  data:dataRecetaI[];
+  nombre: string;
+  especialidad: string;
+  recetas: number;
+  idMedico:string
+}
+
+interface dataRecetaI {
+    fecha:string,
+    codigo:string
 }

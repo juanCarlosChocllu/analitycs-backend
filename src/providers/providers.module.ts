@@ -19,6 +19,7 @@ import { RecetaModule } from 'src/receta/receta.module';
 import { MedicoModule } from 'src/medico/medico.module';
 import { StockModule } from 'src/stock/stock.module';
 import { CotizacionModule } from 'src/cotizacion/cotizacion.module';
+import { LogModule } from 'src/log/log.module';
 
 @Module({
   imports: [
@@ -39,7 +40,8 @@ import { CotizacionModule } from 'src/cotizacion/cotizacion.module';
     RecetaModule,
     MedicoModule,
     StockModule,
-    CotizacionModule
+    CotizacionModule,
+    LogModule
   ],
   controllers: [ProvidersController],
   providers: [ProvidersService],

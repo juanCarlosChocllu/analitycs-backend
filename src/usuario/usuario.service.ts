@@ -15,6 +15,7 @@ import * as argon2 from 'argon2';
 import { AsesorService } from 'src/asesor/asesor.service';
 import { Request } from 'express';
 import { Flag } from 'src/sucursal/enums/flag.enum';
+import { RolE } from './enum/rol';
 @Injectable()
 export class UsuarioService {
   private readonly opcionesArgon2: argon2.Options = {
@@ -25,12 +26,11 @@ export class UsuarioService {
     hashLength: 50,
   };
   constructor(
-    @InjectModel(Usuario.name) private readonly usuario: Model<Usuario>,
-    private readonly asesorService: AsesorService,
+    @InjectModel(Usuario.name) private readonly usuario: Model<Usuario>
   ) {}
 
   async create(createUsuarioDto: CreateUsuarioDto) {
-    createUsuarioDto.asesor = new Types.ObjectId(createUsuarioDto.asesor);
+   
     const username = await this.usuario.findOne({
       username: createUsuarioDto.username,
       flag: Flag.nuevo,
@@ -42,6 +42,9 @@ export class UsuarioService {
       createUsuarioDto.password,
       this.opcionesArgon2,
     );
+    if(createUsuarioDto.rol != RolE.ADMINISTRADOR){
+       createUsuarioDto.asesor = new Types.ObjectId(createUsuarioDto.asesor);
+    }
     await this.usuario.create(createUsuarioDto);
     return { status: HttpStatus.CREATED };
   }
@@ -66,18 +69,17 @@ export class UsuarioService {
           flag: Flag.nuevo,
         },
       },
-     
-     {
-      $project:{
-        _id:1,
-        nombre:1,
-        apellidos:1,
-        username:1,
-        asesor:1,
-        rol:1
-      }
-     }
-      
+
+      {
+        $project: {
+          _id: 1,
+          nombre: 1,
+          apellidos: 1,
+          username: 1,
+          asesor: 1,
+          rol: 1,
+        },
+      },
     ]);
 
     return usuario;
@@ -142,7 +144,7 @@ export class UsuarioService {
     return usuario;
   }
 
-  /* async actualizar(id: Types.ObjectId, updateUsuarioDto: UpdateUsuarioDto) {
+  async actualizar(id: Types.ObjectId, updateUsuarioDto: UpdateUsuarioDto) {
     try {
       const usuario = await this.usuario.findOne({
         _id: new Types.ObjectId(id),
@@ -151,25 +153,19 @@ export class UsuarioService {
       if (!usuario) {
         throw new NotFoundException();
       }
+
+      updateUsuarioDto.asesor = new Types.ObjectId(updateUsuarioDto.asesor);
+
       await this.usuario.updateOne(
         { _id: new Types.ObjectId(id) },
         updateUsuarioDto,
       );
-      if (
-        updateUsuarioDto.asesorUsuario &&
-        updateUsuarioDto.asesorUsuario.length > 0
-      ) {
-        await this.asesorService.eliminarUsuarioAsesor(usuario._id);
-        for (const asesor of updateUsuarioDto.asesorUsuario) {
-          await this.asesorService.asignarUsuarioAsesor(asesor, usuario._id);
-        }
-      }
 
       return { status: HttpStatus.OK };
     } catch (error) {
       throw new BadRequestException();
     }
-  }*/
+  }
 
   async softDelete(id: Types.ObjectId) {
     const usuario = await this.usuario.findOne({
@@ -190,9 +186,8 @@ export class UsuarioService {
     detalleAsesor: Types.ObjectId,
     usuario: Types.ObjectId,
   ) {
-    
-      console.log(detalleAsesor,usuario);
-      
+    console.log(detalleAsesor, usuario);
+
     await this.usuario.updateOne(
       { _id: new Types.ObjectId(usuario) },
       { detalleAsesor: new Types.ObjectId(detalleAsesor) },
@@ -205,7 +200,6 @@ export class UsuarioService {
       .findOne({ _id: new Types.ObjectId(request.usuario.idUsuario) })
       .select('rol');
 
-      
     return usuario;
   }
 }
