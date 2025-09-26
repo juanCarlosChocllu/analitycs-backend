@@ -1,26 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { CreatePrecioDto } from './dto/create-precio.dto';
-import { UpdatePrecioDto } from './dto/update-precio.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Precio } from './schema/precio.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class PrecioService {
-  create(createPrecioDto: CreatePrecioDto) {
-    return 'This action adds a new precio';
-  }
+      @InjectModel(Precio.name) private readonly precio: Model<Precio>
 
-  findAll() {
-    return `This action returns all precio`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} precio`;
-  }
-
-  update(id: number, updatePrecioDto: UpdatePrecioDto) {
-    return `This action updates a #${id} precio`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} precio`;
-  }
+       async  guardarTipoPrecio(nombre:string){
+          const precio = await this.precio.findOne({nombre:nombre})
+          if(!precio){
+            return this.precio.create({nombre:nombre})
+          } 
+          return precio
+        }
 }
