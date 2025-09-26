@@ -15,12 +15,13 @@ import { MetasSucursalModule } from 'src/metas-sucursal/metas-sucursal.module';
 import { AsesorModule } from 'src/asesor/asesor.module';
 import { RendimientoDiarioModule } from 'src/rendimiento-diario/rendimiento-diario.module';
 import { VentaMestasSucursalController } from './controller/ventaMetas.controller';
-import { VentaMetasService } from './service/ventaMentas.service';
+import { VentaMetasService } from './service/ventaMetas.service';
 import { DiasModule } from 'src/dias/dias.module';
 import { VentaMedicosService } from './service/ventaMedicos.service';
 import { VentaLentService } from './service/ventaLente.service';
 import { VentaLenteController } from './controller/ventaLente.controller';
 import { VentaMedicosController } from './controller/ventaMedicos.controller';
+import { RecetaModule } from 'src/receta/receta.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { VentaMedicosController } from './controller/ventaMedicos.controller';
     AsesorModule,
     RendimientoDiarioModule,
     DiasModule,
+    RecetaModule,
     MongooseModule.forFeature([
       { name: Venta.name, schema: ventaSchema },
       { name: DetalleVenta.name, schema: detalleVentaSchema },

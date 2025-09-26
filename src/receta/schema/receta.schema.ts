@@ -118,3 +118,4 @@ export class Receta extends BaseSchema {
   lcDiametroOi: string;
 }
 export const recetaSchema = SchemaFactory.createForClass(Receta);
+recetaSchema.index({codigoReceta:1, fecha:1})

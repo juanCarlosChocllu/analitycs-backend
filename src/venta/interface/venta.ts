@@ -105,6 +105,7 @@ export interface FiltroVentaI {
   flagVenta?: string | { $ne: string } | {$eq :string };
   comisiona?:boolean | null
   estadoTracking: { $ne: string }
+   especialidad?:string | null
  
 }
 

@@ -16,16 +16,16 @@ import { Types } from 'mongoose';
 import type { Request } from 'express';
 import { ValidacionIdPipe } from 'src/core-app/utils/validacion-id/validacion-id.pipe';
 
-@Controller('usuario')
+@Controller('usuarios')
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
-  @Post()
+  @Post("create")
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.usuarioService.create(createUsuarioDto);
   }
 
-  @Get()
+  @Get("listar")
   listarusuarios() {
     return this.usuarioService.listarusuarios();
   }
@@ -39,13 +39,13 @@ export class UsuarioController {
     return this.usuarioService.findOne(id);
   }
 
-  /* @Patch(':id')
+   @Patch(':id')
   actualizar(
     @Param('id', ValidacionIdPipe) id: Types.ObjectId,
     @Body() updateUsuarioDto: UpdateUsuarioDto,
   ) {
     return this.usuarioService.actualizar(id, updateUsuarioDto);
-  }*/
+  }
 
   @Delete(':id')
   softDelete(@Param('id', ValidacionIdPipe) id: Types.ObjectId) {
