@@ -44,6 +44,7 @@ import {
 
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LogService } from 'src/log/log.service';
+import { PrecioService } from 'src/precio/precio.service';
 
 @Injectable()
 export class ProvidersService {
@@ -68,6 +69,7 @@ export class ProvidersService {
     private readonly stockService: StockService,
     private readonly cotizacionService: CotizacionService,
     private readonly logService: LogService,
+       private readonly precioService: PrecioService,
   ) {}
   async descargarVentasMia(createProviderDto: DescargarProviderDto) {
     try {
@@ -78,7 +80,7 @@ export class ProvidersService {
       };
       await this.logService.registroLogDescarga(
         'Venta',
-        createProviderDto.fechaInicio,
+        createProviderDto.fechaFin,
       );
       const ventas = await firstValueFrom(
         this.httpService.post<VentaApiI[]>(
@@ -244,10 +246,11 @@ export class ProvidersService {
           data.local,
         );
         if (sucursal) {
-          const [asesor, tipoVenta, medico] = await Promise.all([
+          const [asesor, tipoVenta, medico, precio] = await Promise.all([
             this.asesorService.guardarAsesor(data.nombre_vendedor),
             this.tipoVentaService.guardarTipoVenta(data.tipoVenta),
             this.medicoService.guardarMedico(data.medico),
+            this.precioService.guardarTipoPrecio(data.precio)
           ]);
           const detalleMedico = await this.medicoService.guardarDetalleMedico(
             medico._id,
@@ -275,7 +278,7 @@ export class ProvidersService {
             tipoDescuento: data.tipoDescuento,
             flagVenta: data.flag,
             montoTotalDescuento: data.monto_total,
-            precio: tipoVenta._id,
+            precio: precio._id,
             cotizacion: data.cotizacion,
             codigoConversion: data.numeroCotizacion,
             tipoConversion: data.tipoConversion,

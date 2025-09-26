@@ -20,6 +20,7 @@ import { MedicoModule } from 'src/medico/medico.module';
 import { StockModule } from 'src/stock/stock.module';
 import { CotizacionModule } from 'src/cotizacion/cotizacion.module';
 import { LogModule } from 'src/log/log.module';
+import { PrecioModule } from 'src/precio/precio.module';
 
 @Module({
   imports: [
@@ -41,7 +42,8 @@ import { LogModule } from 'src/log/log.module';
     MedicoModule,
     StockModule,
     CotizacionModule,
-    LogModule
+    LogModule,
+    PrecioModule
   ],
   controllers: [ProvidersController],
   providers: [ProvidersService],
