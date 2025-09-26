@@ -16,6 +16,7 @@ import { AsesorService } from 'src/asesor/asesor.service';
 import { Request } from 'express';
 import { Flag } from 'src/sucursal/enums/flag.enum';
 import { RolE } from './enum/rol';
+import { ResetearContrasena } from './dto/resetar-contrasena.dto';
 @Injectable()
 export class UsuarioService {
   private readonly opcionesArgon2: argon2.Options = {
@@ -196,10 +197,26 @@ export class UsuarioService {
   }
 
   async verificarRol(request: Request) {
-    const usuario = await this.usuario
+   const usuario = await this.usuario
       .findOne({ _id: new Types.ObjectId(request.usuario.idUsuario) })
       .select('rol');
 
     return usuario;
+  }
+   async perfil(idUsuario:Types.ObjectId){
+    const usuario = await this.usuario.findById(idUsuario)    
+    console.log(usuario);
+    
+    return usuario
+  }
+   async resetarContrasenaUsuario(resetearContrasena: ResetearContrasena, id:Types.ObjectId){
+    const usuario = await this.usuario.findById(id)
+    if(!usuario){
+      throw new NotFoundException()
+    }
+    resetearContrasena.password = await argon2.hash(resetearContrasena.password, this.opcionesArgon2)
+     await this.usuario.findByIdAndUpdate(id,{$set:{password:resetearContrasena.password}})
+     return {status:HttpStatus.OK,   message: 'La contraseña se ha cambiado con éxito.' }
+
   }
 }
