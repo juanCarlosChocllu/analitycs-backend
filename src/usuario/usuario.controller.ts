@@ -15,6 +15,7 @@ import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Types } from 'mongoose';
 import type { Request } from 'express';
 import { ValidacionIdPipe } from 'src/core-app/utils/validacion-id/validacion-id.pipe';
+import { ResetearContrasena } from './dto/resetar-contrasena.dto';
 
 @Controller('usuarios')
 export class UsuarioController {
@@ -24,7 +25,11 @@ export class UsuarioController {
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.usuarioService.create(createUsuarioDto);
   }
-
+   @Get('perfil')
+  perfil(@Req() request:Request) {       
+   
+    return this.usuarioService.perfil(request.usuario.idUsuario);
+  }
   @Get("listar")
   listarusuarios() {
     return this.usuarioService.listarusuarios();
@@ -65,4 +70,10 @@ export class UsuarioController {
   verificarRol(@Req() request: Request) {
     return this.usuarioService.verificarRol(request);
   }
+ @Post('resetear/contrasena/:id')
+  resetarContrasenaUsuario(@Body() resetearContrasena: ResetearContrasena, @Param('id',ValidacionIdPipe) id:Types.ObjectId) {
+    return this.usuarioService.resetarContrasenaUsuario(resetearContrasena, id);
+  }
+  
+ 
 }
