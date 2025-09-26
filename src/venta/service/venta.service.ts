@@ -54,7 +54,7 @@ export class VentaService {
 
     async finalizarVentasCron(FinalizarVentaMia: FinalizarVentaMia) {
     const venta = await this.venta.findOne({
-      id_venta: FinalizarVentaMia.id_venta,
+      id_venta: FinalizarVentaMia.id_venta.toUpperCase(),
     });
     if (venta) {
       await this.venta.updateOne(
