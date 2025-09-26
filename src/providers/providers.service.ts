@@ -211,7 +211,7 @@ export class ProvidersService {
         estado: venta.estado,
         estadoTracking: venta.estadoTracking,
         fechaAnulacion: venta.fechaAprobacionAnulacion,
-        id_venta: venta.id_venta,
+        id_venta: venta.id_venta.toUpperCase(),
       };
 
       await this.ventaService.anularVenta(data);
@@ -250,7 +250,7 @@ export class ProvidersService {
             this.asesorService.guardarAsesor(data.nombre_vendedor),
             this.tipoVentaService.guardarTipoVenta(data.tipoVenta),
             this.medicoService.guardarMedico(data.medico),
-            this.precioService.guardarTipoPrecio(data.precio)
+            this.precioService.guardarTipoPrecio(data.precio.toUpperCase())
           ]);
           const detalleMedico = await this.medicoService.guardarDetalleMedico(
             medico._id,
