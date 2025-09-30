@@ -111,7 +111,7 @@ export class MetasSucursalService {
           $unwind: { path: '$sucursal', preserveNullAndEmptyArrays: false },
         },
         {
-          $sort: { fecha: -1 },
+          $sort: { fechaCreacion: -1 },
         },
         {
           $project: {
