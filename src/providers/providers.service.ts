@@ -702,4 +702,6 @@ export class ProvidersService {
     this.logger.debug('Iniciando la descarga');
     await this.descargarCotizacion(fecha);
   }
+
+ 
 }

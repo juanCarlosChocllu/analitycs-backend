@@ -21,9 +21,11 @@ import { StockModule } from 'src/stock/stock.module';
 import { CotizacionModule } from 'src/cotizacion/cotizacion.module';
 import { LogModule } from 'src/log/log.module';
 import { PrecioModule } from 'src/precio/precio.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+     ScheduleModule.forRoot(),
     CoreAppModule,
     HttpModule,
     SucursalModule,
