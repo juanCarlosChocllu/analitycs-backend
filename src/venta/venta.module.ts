@@ -21,6 +21,7 @@ import { VentaMedicosService } from './service/ventaMedicos.service';
 import { VentaLentService } from './service/ventaLente.service';
 import { VentaLenteController } from './controller/ventaLente.controller';
 import { VentaMedicosController } from './controller/ventaMedicos.controller';
+import { EmpresaModule } from 'src/empresa/empresa.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { VentaMedicosController } from './controller/ventaMedicos.controller';
     AsesorModule,
     RendimientoDiarioModule,
     DiasModule,
+    EmpresaModule,
     MongooseModule.forFeature([
       { name: Venta.name, schema: ventaSchema },
       { name: DetalleVenta.name, schema: detalleVentaSchema },

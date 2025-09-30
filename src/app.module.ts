@@ -72,9 +72,9 @@ import { DiasModule } from './dias/dias.module';
     DiasModule
   ],
   controllers: [],
-  providers: [ /*{
+  providers: [ {
       provide:APP_GUARD,
       useClass:TokenGuard
-    }*/],
+    }],
 })
 export class AppModule {}
