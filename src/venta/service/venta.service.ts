@@ -557,11 +557,12 @@ export class VentaService {
       ];
 
       const [sucursal, resultado] = await Promise.all([
-        this.sucursalService.buscarSucursal(`${asesor.idSucursal}`),
+        this.sucursalService.buscarSucursalPorId(asesor.idSucursal),
 
         this.venta.aggregate(pipline),
       ]);
-
+      console.log(sucursal,asesor.idSucursal);
+      
       const resultadoFinal =
         resultado.length > 0
           ? resultado[0]
@@ -581,7 +582,8 @@ export class VentaService {
         asesor: asesor.nombre,
         ...resultadoFinal,
       };
-
+      console.log(data);
+      
       venPorAsesor.push(data);
     }
 
