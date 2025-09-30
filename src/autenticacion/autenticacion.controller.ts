@@ -18,7 +18,9 @@ export class AutenticacionController {
 
   @Post()
   @Publico()
-  async create(@Body() AutenticacionDto: AutenticacionDto) {
+  async Login(@Body() AutenticacionDto: AutenticacionDto) {
+
+    
     try {
    /*   const {token}= await this.autenticacionService.autenticacion(AutenticacionDto)
        if (token) {

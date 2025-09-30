@@ -187,7 +187,7 @@ export class UsuarioService {
     detalleAsesor: Types.ObjectId,
     usuario: Types.ObjectId,
   ) {
-    console.log(detalleAsesor, usuario);
+    console.log('s',detalleAsesor, usuario);
 
     await this.usuario.updateOne(
       { _id: new Types.ObjectId(usuario) },
