@@ -59,6 +59,8 @@ export function calcularPaginas(countDocuments: number, limite: number): number 
 
 export function ticketPromedio(totalVenta: number, cantidadTotaVenta: number) {
     const tkPromedio = totalVenta / cantidadTotaVenta;
+    console.log(tkPromedio);
+    
     return tkPromedio ? parseFloat(tkPromedio.toFixed(2)) : 0;
   }
 
@@ -69,3 +71,12 @@ export function ticketPromedio(totalVenta: number, cantidadTotaVenta: number) {
 
   return diasHAbiles.length;
 }
+
+export function tasaConversion(totalConvertidos:number,totalVisitantes:number ):number{
+    if(totalVisitantes <= 0  || totalConvertidos <= 0){
+        return 0
+      }
+    const resultado = (totalConvertidos/totalVisitantes) * 100
+    return Math.round(resultado)
+}
+

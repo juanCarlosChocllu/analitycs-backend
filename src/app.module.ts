@@ -31,6 +31,7 @@ import { AutenticacionModule } from './autenticacion/autenticacion.module';
 import { APP_GUARD } from '@nestjs/core';
 import { TokenGuard } from './autenticacion/guards/token/token.guard';
 import { DiasModule } from './dias/dias.module';
+import { LogModule } from './log/log.module';
 
 @Module({
   imports: [
@@ -69,7 +70,8 @@ import { DiasModule } from './dias/dias.module';
     RendimientoDiarioModule,
     UsuarioModule,
     AutenticacionModule,
-    DiasModule
+    DiasModule,
+    LogModule
   ],
   controllers: [],
   providers: [ {

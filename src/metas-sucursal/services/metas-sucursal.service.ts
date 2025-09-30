@@ -2,7 +2,6 @@ import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMetasSucursalDto } from '../dto/create-metas-sucursal.dto';
 import { UpdateMetasSucursalDto } from '../dto/update-metas-sucursal.dto';
 
-
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
@@ -12,60 +11,50 @@ import { DiasMetaService } from './diaMeta.service';
 
 import { SucursalService } from 'src/sucursal/sucursal.service';
 import { webhookMentasI } from '../interface/metasInterface';
-import { formaterFechaHora } from 'src/core-app/utils/coreAppUtils';
+import { formaterFechaHora, skip } from 'src/core-app/utils/coreAppUtils';
 import { Flag } from 'src/sucursal/enums/flag.enum';
 import { FlagVentaE } from 'src/venta/enum/ventaEnum';
-
-
 
 @Injectable()
 export class MetasSucursalService {
   constructor(
     @InjectModel(MetasSucursal.name)
-    private readonly metasSucursal: Model<MetasSucursal>
+    private readonly metasSucursal: Model<MetasSucursal>,
   ) {}
 
   async create(createMetasSucursalDto: CreateMetasSucursalDto) {
     for (const sucursal of createMetasSucursalDto.sucursal) {
-      
-      const meta=  await this.metasSucursal.create({
+      const meta = await this.metasSucursal.create({
         ticket: createMetasSucursalDto.ticket,
         fechaFin: createMetasSucursalDto.fechaFin,
         fechaInicio: createMetasSucursalDto.fechaInicio,
         monto: createMetasSucursalDto.monto,
-        dias:createMetasSucursalDto.dias,
+        dias: createMetasSucursalDto.dias,
         sucursal: new Types.ObjectId(sucursal),
-      })
-       
+      });
     }
-  
+
     return { status: HttpStatus.CREATED };
   }
 
-  
-  
- 
-  
-    async findAll(buscadorMetasDto: BuscadorMetasDto) {
+  async findAll(buscadorMetasDto: BuscadorMetasDto) {
+    console.log(buscadorMetasDto);
 
-      
-    const {f1, f2}= formaterFechaHora(
+    const { f1, f2 } = formaterFechaHora(
       buscadorMetasDto.fechaInicio,
       buscadorMetasDto.fechaFin,
     );
 
-    const { f1 :fechaMetaInicio, f2: fechaMetaFin} = formaterFechaHora(
+    const { f1: fechaMetaInicio, f2: fechaMetaFin } = formaterFechaHora(
       buscadorMetasDto.fechaMetaInicio,
       buscadorMetasDto.fechaMetaFin,
     );
-
 
     const countDocuments = await this.metasSucursal.countDocuments({
       flag: Flag.nuevo,
       ...(buscadorMetasDto.sucursal
         ? { sucursal: new Types.ObjectId(buscadorMetasDto.sucursal) }
         : {}),
-
 
       ...(buscadorMetasDto.fechaInicio && buscadorMetasDto.fechaFin
         ? {
@@ -81,9 +70,7 @@ export class MetasSucursalService {
         : {}),
     });
 
- 
-    
-    const paginas = Math.ceil(countDocuments / Number(buscadorMetasDto.limite));
+    const paginas = Math.ceil(countDocuments / buscadorMetasDto.limite);
 
     const metas = await this.metasSucursal
       .aggregate([
@@ -96,17 +83,19 @@ export class MetasSucursalService {
 
             ...(buscadorMetasDto.fechaInicio && buscadorMetasDto.fechaFin
               ? {
-                  fecha: {
+                  fechaCreacion: {
                     $gte: f1,
                     $lte: f2,
                   },
                 }
               : {}),
 
-
             ...(buscadorMetasDto.fechaMetaInicio &&
             buscadorMetasDto.fechaMetaFin
-              ? { fechaInicio:  {$gte:fechaMetaInicio}, fechaFin:{$lte: fechaMetaFin }}
+              ? {
+                  fechaInicio: { $gte: fechaMetaInicio },
+                  fechaFin: { $lte: fechaMetaFin },
+                }
               : {}),
           },
         },
@@ -122,14 +111,14 @@ export class MetasSucursalService {
           $unwind: { path: '$sucursal', preserveNullAndEmptyArrays: false },
         },
         {
-          $sort:{fecha:-1}
+          $sort: { fechaCreacion: -1 },
         },
         {
           $project: {
             _id: 1,
             monto: 1,
             ticket: 1,
-            dias:1,
+            dias: 1,
             sucursal: '$sucursal.nombre',
             fechaInicio: {
               $dateToString: {
@@ -146,21 +135,18 @@ export class MetasSucursalService {
             fecha: {
               $dateToString: {
                 format: '%Y-%m-%d',
-                date: '$fecha',
+                date: '$fechaCreacion',
               },
             },
           },
         },
       ])
-      .skip(
-        (buscadorMetasDto.pagina) - 1 * buscadorMetasDto.limite,
-      )
-      .limit(buscadorMetasDto.limite)
-            
+      .skip(skip(buscadorMetasDto.pagina, buscadorMetasDto.limite))
+      .limit(buscadorMetasDto.limite);
+
     return { paginas: paginas == 0 ? 1 : paginas, data: metas };
   }
 
- 
   async softDelete(id: Types.ObjectId) {
     const meta = await this.metasSucursal.findOne({
       _id: new Types.ObjectId(id),
@@ -177,28 +163,25 @@ export class MetasSucursalService {
     return { status: HttpStatus.OK };
   }
 
-  async listarMetasSucursal(
-    sucursal: Types.ObjectId,
-    fechaInicio: Date,
-  ){
-  
+  async listarMetasSucursal(sucursal: Types.ObjectId, fechaInicio: Date) {
     const meta = await this.metasSucursal.findOne({
       sucursal: new Types.ObjectId(sucursal),
       flag: Flag.nuevo,
-      fechaInicio:fechaInicio
+      fechaInicio: fechaInicio,
     });
 
     return meta;
-   
-  
   }
 
-
-  
-   async listarMetasPorSucursal(sucursal:Types.ObjectId, fechaInicio:Date){
-
-    
-      const metas =await this.metasSucursal.findOne({sucursal:new Types.ObjectId(sucursal), fechaInicio:fechaInicio,flag:Flag.nuevo},{monto:1, dias:1,ticket:1})
-    return metas
-   }
+  async listarMetasPorSucursal(sucursal: Types.ObjectId, fechaInicio: Date) {
+    const metas = await this.metasSucursal.findOne(
+      {
+        sucursal: new Types.ObjectId(sucursal),
+        fechaInicio: fechaInicio,
+        flag: Flag.nuevo,
+      },
+      { monto: 1, dias: 1, ticket: 1 },
+    );
+    return metas;
+  }
 }

@@ -1,34 +1,19 @@
+import { Transform } from 'class-transformer';
 import {
-  IsArray,
   IsBoolean,
   IsDate,
-  IsDateString,
   IsEnum,
   IsMongoId,
   IsNotEmpty,
   IsOptional,
-  IsString,
 } from 'class-validator';
 import { Types } from 'mongoose';
 import { FlagVentaE } from '../enum/ventaEnum';
-import { Transform } from 'class-transformer';
 
-export class BuscadorVentaDto {
-  @IsMongoId({ each: true })
-  sucursal: Types.ObjectId[];
-
+export class DetalleVentaDto {
   @IsMongoId({ each: true })
   @IsOptional()
   tipoVenta: Types.ObjectId[];
-
-  @IsEnum(FlagVentaE)
-  @IsNotEmpty()
-  flagVenta: string;
-
-  @IsString({ each: true })
-  @IsOptional()
-  @IsArray()
-  rubro: string[];
 
   @IsOptional()
   @IsBoolean()
@@ -51,4 +36,8 @@ export class BuscadorVentaDto {
     return date;
   })
   fechaFin: Date;
+
+  @IsEnum(FlagVentaE)
+  @IsNotEmpty()
+  flagVenta: string;
 }

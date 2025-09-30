@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { Venta } from '../schema/venta.schema';
 import { Model, PipelineStage, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -14,6 +14,7 @@ import { DescargarProviderDto } from 'src/providers/dto/DescargarProviderDto';
 import {
   diasHAbiles,
   formaterFechaHora,
+  horaUtc,
   ticketPromedio,
 } from 'src/core-app/utils/coreAppUtils';
 import { SucursalService } from 'src/sucursal/sucursal.service';
@@ -21,6 +22,7 @@ import { BuscadorVentaDto } from '../dto/BuscadorVenta.dto';
 import { filtradorVenta } from '../utils/filtroVenta';
 import { FlagVentaE } from '../enum/ventaEnum';
 import { AsesorService } from 'src/asesor/asesor.service';
+import { AnularVentaI, FinalizarVentaMia } from 'src/providers/interface/ApiMia';
 
 @Injectable()
 export class VentaService {
@@ -32,6 +34,43 @@ export class VentaService {
     private readonly sucursalService: SucursalService,
     private readonly asesorService: AsesorService,
   ) {}
+
+    async anularVenta(anularVentaDto: AnularVentaI) {
+    const venta = await this.venta.findOne({
+      id_venta: anularVentaDto.id_venta,
+    });
+    if (venta) {
+      await this.venta.updateOne(
+        { id_venta: anularVentaDto.id_venta },
+        {
+          fechaAnulacion: horaUtc(anularVentaDto.fechaAnulacion),
+          estadoTracking: anularVentaDto.estadoTracking,
+          estado: anularVentaDto.estado,
+        },
+      );
+      return { status: HttpStatus.OK };
+    }
+  }
+
+    async finalizarVentasCron(FinalizarVentaMia: FinalizarVentaMia) {
+    const venta = await this.venta.findOne({
+      id_venta: FinalizarVentaMia.id_venta.toUpperCase(),
+    });
+    if (venta) {
+      await this.venta.updateOne(
+        { id_venta: FinalizarVentaMia.id_venta.toUpperCase().trim() },
+        {
+          fechaFinalizacion: horaUtc(FinalizarVentaMia.fecha_finalizacion),
+          estadoTracking: FinalizarVentaMia.estadoTracking,
+          flagVenta: FinalizarVentaMia.flaVenta,
+          estado: FinalizarVentaMia.estado,
+        },
+      );
+    } else {
+      console.log('Ventas no encontradas', FinalizarVentaMia.id_venta);
+    }
+  }
+
 
   async guardarVenta(ventaData: VentaIOpcional) {
     const venta = await this.venta.findOne({ id_venta: ventaData.id_venta });
@@ -313,9 +352,9 @@ export class VentaService {
     const agrupacion =
       flagVenta === FlagVentaE.finalizadas
         ? {
-            aqo: { $year: '$fecha' },
-            mes: { $month: '$fecha' },
-            dia: { $dayOfMonth: '$fecha' },
+            aqo: { $year: '$fechaFinalizacion' },
+            mes: { $month: '$fechaFinalizacion' },
+            dia: { $dayOfMonth: '$fechaFinalizacion' },
           }
         : {
             aqo: { $year: '$fechaVenta' },
@@ -518,11 +557,12 @@ export class VentaService {
       ];
 
       const [sucursal, resultado] = await Promise.all([
-        this.sucursalService.buscarSucursal(`${asesor.idSucursal}`),
+        this.sucursalService.buscarSucursalPorId(asesor.idSucursal),
 
         this.venta.aggregate(pipline),
       ]);
-
+      console.log(sucursal,asesor.idSucursal);
+      
       const resultadoFinal =
         resultado.length > 0
           ? resultado[0]
@@ -542,7 +582,8 @@ export class VentaService {
         asesor: asesor.nombre,
         ...resultadoFinal,
       };
-
+      console.log(data);
+      
       venPorAsesor.push(data);
     }
 
@@ -627,9 +668,9 @@ export class VentaService {
     const agrupacion =
       ventaTodasDto.flagVenta === FlagVentaE.finalizadas
         ? {
-            aqo: { $year: '$fecha' },
-            mes: { $month: '$fecha' },
-            dia: { $dayOfMonth: '$fecha' },
+            aqo: { $year: '$fechaFinalizacion' },
+            mes: { $month: '$fechaFinalizacion' },
+            dia: { $dayOfMonth: '$fechaFinalizacion' },
           }
         : {
             aqo: { $year: '$fechaVenta' },
@@ -793,7 +834,7 @@ export class VentaService {
       ventaSucursal,
       cantidadSucursal: sucursales.length,
     };
-    console.log(resultado);
+
 
     return resultado;
   }
@@ -807,8 +848,8 @@ export class VentaService {
     const totalVenta: number[] = [];
     const cantidadTotal: number[] = [];
     for (let venta of ventaPorSucursal) {
-      totalVenta.push(this.cantidadTotal(venta.data));
-      cantidadTotal.push(this.total(venta.data));
+      cantidadTotal.push(this.cantidadTotal(venta.data));
+      totalVenta.push(this.total(venta.data));
     }
 
     const total = totalVenta
@@ -818,14 +859,18 @@ export class VentaService {
       (total, cantidad) => total + cantidad,
       0,
     );
+
+    
     const tktPromedio = ticketPromedio(parseFloat(total), cantidad);
+
+    
     const ventaPorDia = parseFloat((parseFloat(total) / dias).toFixed(2));
 
     const resultado = {
       total,
       cantidad,
       ventaPorDia,
-      tktPromedio,
+      ticketPromedio:tktPromedio,
     };
     return resultado;
   }

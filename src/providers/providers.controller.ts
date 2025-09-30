@@ -24,8 +24,22 @@ export class ProvidersController {
     return this.providersService.descargarStockProductos(descargarProviderDto);
   }
 
-    @Post('mia/cotizacion')
+  @Post('mia/cotizacion')
   descargarCotizacion(@Body() descargarProviderDto: DescargarProviderDto) {
     return this.providersService.descargarCotizacion(descargarProviderDto);
+  }
+
+  @Post('receta')
+  descargarReceta(@Body() fechaDto: DescargarProviderDto) {
+    return this.providersService.descargarReceta(fechaDto);
+  }
+  @Post('mia/venta/finalizar')
+  finalizarVentas(@Body() descargarProviderDto: DescargarProviderDto) {
+    return this.providersService.finalizarVentas(descargarProviderDto);
+  }
+
+  @Post('mia/venta/anular')
+  anularVentas(@Body() descargarProviderDto: DescargarProviderDto) {
+    return this.providersService.anularVentas(descargarProviderDto);
   }
 }

@@ -19,9 +19,13 @@ import { RecetaModule } from 'src/receta/receta.module';
 import { MedicoModule } from 'src/medico/medico.module';
 import { StockModule } from 'src/stock/stock.module';
 import { CotizacionModule } from 'src/cotizacion/cotizacion.module';
+import { LogModule } from 'src/log/log.module';
+import { PrecioModule } from 'src/precio/precio.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+     ScheduleModule.forRoot(),
     CoreAppModule,
     HttpModule,
     SucursalModule,
@@ -39,7 +43,9 @@ import { CotizacionModule } from 'src/cotizacion/cotizacion.module';
     RecetaModule,
     MedicoModule,
     StockModule,
-    CotizacionModule
+    CotizacionModule,
+    LogModule,
+    PrecioModule
   ],
   controllers: [ProvidersController],
   providers: [ProvidersService],

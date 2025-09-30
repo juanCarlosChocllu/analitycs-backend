@@ -1,11 +1,18 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateProviderDto } from './dto/create-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { HttpService } from '@nestjs/axios';
 import { DescargarProviderDto } from './dto/DescargarProviderDto';
 import { firstValueFrom } from 'rxjs';
 import { AppConfigService } from 'src/core-app/config/appConfigService';
-import { CotizacionMIaI, VentaApiI } from './interface/ApiMia';
+import {
+  AnularVentaI,
+  AnularVentaMiaI,
+  CotizacionMIaI,
+  FinalizarVentaMia,
+  RecetaResponseI,
+  VentaApiI,
+} from './interface/ApiMia';
 import { VentaI, VentaIOpcional } from 'src/venta/interface/venta';
 import { SucursalService } from 'src/sucursal/sucursal.service';
 import { TipoVentaService } from 'src/tipo-venta/tipo-venta.service';
@@ -34,10 +41,14 @@ import {
   CotizacionI,
   DetalleCotizacionI,
 } from 'src/cotizacion/interface/cotizacion';
-import { cp } from 'fs';
+
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { LogService } from 'src/log/log.service';
+import { PrecioService } from 'src/precio/precio.service';
 
 @Injectable()
 export class ProvidersService {
+  private readonly logger = new Logger(ProvidersService.name);
   constructor(
     private readonly httpService: HttpService,
     private readonly appConfigService: AppConfigService,
@@ -57,6 +68,8 @@ export class ProvidersService {
     private readonly medicoService: MedicoService,
     private readonly stockService: StockService,
     private readonly cotizacionService: CotizacionService,
+    private readonly logService: LogService,
+       private readonly precioService: PrecioService,
   ) {}
   async descargarVentasMia(createProviderDto: DescargarProviderDto) {
     try {
@@ -65,6 +78,10 @@ export class ProvidersService {
         fechaInicio: createProviderDto.fechaInicio,
         token: this.appConfigService.tokenMia,
       };
+      await this.logService.registroLogDescarga(
+        'Venta',
+        createProviderDto.fechaFin,
+      );
       const ventas = await firstValueFrom(
         this.httpService.post<VentaApiI[]>(
           `${this.appConfigService.apiMia}/api/ventas`,
@@ -78,6 +95,95 @@ export class ProvidersService {
     }
   }
 
+  async ventasFinalizadasMia(createProviderDto: DescargarProviderDto) {
+    try {
+      const data: DescargarProviderDto = {
+        fechaFin: createProviderDto.fechaFin,
+        fechaInicio: createProviderDto.fechaInicio,
+        token: this.appConfigService.tokenMia,
+      };
+      const ventas = await firstValueFrom(
+        this.httpService.post<FinalizarVentaMia[]>(
+          `${this.appConfigService.apiMia}/api/ventas/finalizadas2`,
+          data,
+        ),
+      );
+
+      return ventas.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async anularVentasMia(createProviderDto: DescargarProviderDto) {
+    try {
+      const data: DescargarProviderDto = {
+        fechaFin: createProviderDto.fechaFin,
+        fechaInicio: createProviderDto.fechaInicio,
+        token: this.appConfigService.tokenMia,
+      };
+      const ventas = await firstValueFrom(
+        this.httpService.post<AnularVentaMiaI[]>(
+          `${this.appConfigService.apiMia}/api/ventas/anuladas`,
+          data,
+        ),
+      );     
+      return ventas.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async finalizarVentas(descargarProviderDto: DescargarProviderDto) {
+    const ventas = await this.ventasFinalizadasMia(descargarProviderDto);
+    for (const venta of ventas) {
+      await this.ventaService.finalizarVentasCron(venta);
+    }
+  }
+
+  public async descargarRecetaMia(
+    createProviderDto: DescargarProviderDto,
+  ): Promise<RecetaResponseI[]> {
+    const body: DescargarProviderDto = {
+      fechaFin: createProviderDto.fechaFin,
+      fechaInicio: createProviderDto.fechaInicio,
+      token: this.appConfigService.tokenMia,
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          `${this.appConfigService.apiMia}/api/recetas/medico`,
+          body,
+        ),
+      );
+
+      return response.data;
+    } catch (error) {
+      console.log(error);
+
+      throw error;
+    }
+  }
+
+  async descargarReceta(descargarDto: DescargarProviderDto) {
+    const receta = await this.descargarRecetaMia(descargarDto);
+    for (const data of receta) {
+      const medico = await this.medicoService.guardarMedico(data.medico);
+
+      const detalle = await this.medicoService.guardarDetalleMedico(
+        medico._id,
+        data.especialidad,
+      );
+
+      const nuevaReceta: recetaI = {
+        ...data,
+        fecha: horaUtc(data.fecha),
+        detalleMedico: new Types.ObjectId(detalle._id),
+      };
+      await this.recetaService.regitrarReceta(nuevaReceta);
+    }
+  }
   async descargarCotizacionesMia(createProviderDto: DescargarProviderDto) {
     try {
       const data: DescargarProviderDto = {
@@ -98,6 +204,20 @@ export class ProvidersService {
     }
   }
 
+  async anularVentas(createProviderDto: DescargarProviderDto) {
+    const ventas = await this.anularVentasMia(createProviderDto);
+    for (const venta of ventas) {
+      const data: AnularVentaI = {
+        estado: venta.estado,
+        estadoTracking: venta.estadoTracking,
+        fechaAnulacion: venta.fechaAprobacionAnulacion,
+        id_venta: venta.id_venta.toUpperCase(),
+      };
+
+      await this.ventaService.anularVenta(data);
+    }
+    return { status: HttpStatus.OK };
+  }
   async descargarStockMia(producto: string[]): Promise<StockMia[]> {
     try {
       const data = {
@@ -126,10 +246,11 @@ export class ProvidersService {
           data.local,
         );
         if (sucursal) {
-          const [asesor, tipoVenta, medico] = await Promise.all([
+          const [asesor, tipoVenta, medico, precio] = await Promise.all([
             this.asesorService.guardarAsesor(data.nombre_vendedor),
             this.tipoVentaService.guardarTipoVenta(data.tipoVenta),
             this.medicoService.guardarMedico(data.medico),
+            this.precioService.guardarTipoPrecio(data.precio.toUpperCase())
           ]);
           const detalleMedico = await this.medicoService.guardarDetalleMedico(
             medico._id,
@@ -157,7 +278,7 @@ export class ProvidersService {
             tipoDescuento: data.tipoDescuento,
             flagVenta: data.flag,
             montoTotalDescuento: data.monto_total,
-            precio: tipoVenta._id,
+            precio: precio._id,
             cotizacion: data.cotizacion,
             codigoConversion: data.numeroCotizacion,
             tipoConversion: data.tipoConversion,
@@ -464,4 +585,123 @@ export class ProvidersService {
       }
     }
   }
+
+  @Cron(CronExpression.EVERY_DAY_AT_6AM)
+  async finalizarVentasCron() {
+    const hoy = new Date();
+
+    const fechaFinDate = new Date(hoy);
+    fechaFinDate.setDate(hoy.getDate() - 1);
+
+    const fechaInicioDate = new Date(hoy);
+    fechaInicioDate.setDate(hoy.getDate() - 2);
+
+    const formatearFecha = (fecha: Date): string => {
+      const año = fecha.getFullYear();
+      const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+      const dia = fecha.getDate().toString().padStart(2, '0');
+      return `${año}-${mes}-${dia}`;
+    };
+
+    const fecha: DescargarProviderDto = {
+      fechaInicio: formatearFecha(fechaInicioDate),
+      fechaFin: formatearFecha(fechaFinDate),
+    };
+    this.logger.debug('Iniciando las finalizaciones');
+    await this.finalizarVentas(fecha);
+  }
+  @Cron(CronExpression.EVERY_DAY_AT_7AM)
+  async anularVentasCron() {
+    try {
+      const hoy = new Date();
+      const fechaFinDate = new Date(hoy);
+      fechaFinDate.setDate(hoy.getDate() - 1);
+
+      const fechaInicioDate = new Date(hoy);
+      fechaInicioDate.setDate(hoy.getDate() - 5);
+
+      const formatearFecha = (fecha: Date): string => {
+        const año = fecha.getFullYear();
+        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+        const dia = fecha.getDate().toString().padStart(2, '0');
+        return `${año}-${mes}-${dia}`;
+      };
+
+      const fecha: DescargarProviderDto = {
+        fechaInicio: formatearFecha(fechaInicioDate),
+        fechaFin: formatearFecha(fechaFinDate),
+      };
+
+      this.logger.debug('Iniciando la anulaciones');
+      const response = await this.anularVentas(fecha);
+      console.log(fecha);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_5AM)
+  async descargaRecetas() {
+    try {
+      const date = new Date();
+
+      const fechaAyer = new Date(date);
+      fechaAyer.setDate(date.getDate() - 1);
+
+      const año = fechaAyer.getFullYear();
+      const mes = (fechaAyer.getMonth() + 1).toString().padStart(2, '0');
+      const dia = fechaAyer.getDate().toString().padStart(2, '0');
+
+      const fecha: DescargarProviderDto = {
+        fechaInicio: `${año}-${mes}-${dia}`,
+        fechaFin: `${año}-${mes}-${dia}`,
+      };
+
+      this.logger.debug('Iniciando la descarga recetas');
+      const response = await this.descargarReceta(fecha);
+      console.log(fecha);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_4AM)
+  async descargarVentasCron() {
+    const date = new Date();
+
+    const fechaAyer = new Date(date);
+    fechaAyer.setDate(date.getDate() - 1);
+
+    const año = fechaAyer.getFullYear();
+    const mes = (fechaAyer.getMonth() + 1).toString().padStart(2, '0');
+    const dia = fechaAyer.getDate().toString().padStart(2, '0');
+
+    const fecha: DescargarProviderDto = {
+      fechaInicio: `${año}-${mes}-${dia}`,
+      fechaFin: `${año}-${mes}-${dia}`,
+    };
+    this.logger.debug('Iniciando la descarga');
+    await this.guardardataVenta(fecha);
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  async descargarCotizacionesCron() {
+    const date = new Date();
+
+    const fechaAyer = new Date(date);
+    fechaAyer.setDate(date.getDate() - 1);
+
+    const año = fechaAyer.getFullYear();
+    const mes = (fechaAyer.getMonth() + 1).toString().padStart(2, '0');
+    const dia = fechaAyer.getDate().toString().padStart(2, '0');
+
+    const fecha: DescargarProviderDto = {
+      fechaInicio: `${año}-${mes}-${dia}`,
+      fechaFin: `${año}-${mes}-${dia}`,
+    };
+    this.logger.debug('Iniciando la descarga');
+    await this.descargarCotizacion(fecha);
+  }
+
+ 
 }

@@ -41,6 +41,8 @@ export class TokenGuard implements CanActivate {
         const usuario = await this.usuariosService.buscarUsuarioPorId(
           tokenVerificada.id,
         );
+  
+        
          if (usuario) {
           request.usuario = {
             detalleAsesor: usuario.detalleAsesor ? usuario.detalleAsesor : null,
