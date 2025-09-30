@@ -1,7 +1,24 @@
 import { Transform } from 'class-transformer';
-import { IsDate, IsDateString, IsNotEmpty } from 'class-validator';
+import {
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+} from 'class-validator';
+import { Types } from 'mongoose';
+import { FlagVentaE } from '../enum/ventaEnum';
 
-export class BuscadorRecetaDto {
+export class DetalleVentaDto {
+  @IsMongoId({ each: true })
+  @IsOptional()
+  tipoVenta: Types.ObjectId[];
+
+  @IsOptional()
+  @IsBoolean()
+  comisiona: boolean;
+
   @IsDate()
   @IsNotEmpty()
   @Transform(({ value }: { value: string }) => {
@@ -19,4 +36,8 @@ export class BuscadorRecetaDto {
     return date;
   })
   fechaFin: Date;
+
+  @IsEnum(FlagVentaE)
+  @IsNotEmpty()
+  flagVenta: string;
 }
