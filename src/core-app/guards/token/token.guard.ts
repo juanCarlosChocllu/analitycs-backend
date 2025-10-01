@@ -28,9 +28,7 @@ export class TokenGuard implements CanActivate {
     }
     const request: Request = context.switchToHttp().getRequest();
     try {
-      const token: string = request.cookies['ctx'];
-      console.log(token);
-      
+      const token: string = request.cookies['ctx'];  
       if (token) {
         const tokenVerificada = await this.jwtService.verify(token, {
           secret: jwtConstants.secret,

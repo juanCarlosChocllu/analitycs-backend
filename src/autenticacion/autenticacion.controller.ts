@@ -27,7 +27,7 @@ export class AutenticacionController {
       if (token) {
         res.cookie('ctx', token, {
           httpOnly: true,
-          secure: true, //Cambiar a true en producción con HTTPS
+          secure: true, 
           maxAge: 1000 * 60 * 60 * 4, 
           sameSite: 'none',
           path: '/',
