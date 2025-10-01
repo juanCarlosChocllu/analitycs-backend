@@ -29,7 +29,7 @@ export class AutenticacionController {
           httpOnly: true,
           secure: true, //Cambiar a true en producción con HTTPS
           maxAge: 1000 * 60 * 60 * 4, 
-          sameSite: 'strict',
+          sameSite: 'none',
           path: '/',
         });
         return res.json({ status: HttpStatus.OK });
