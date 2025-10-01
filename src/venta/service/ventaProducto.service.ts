@@ -9,6 +9,7 @@ import { Type } from 'class-transformer';
 import { SucursalService } from 'src/sucursal/sucursal.service';
 import { FlagVentaE } from '../enum/ventaEnum';
 import { CotizacionService } from 'src/cotizacion/cotizacion.service';
+import { filtradorVenta } from '../utils/filtroVenta';
 
 @Injectable()
 export class VentaProductoService {
@@ -31,29 +32,7 @@ export class VentaProductoService {
     }
 
     // Preparar filtro inicial común
-    const filtroVenta: any = {};
-
-    if (buscadorVentaDto.tipoVenta?.length > 0) {
-      filtroVenta.sucursal = {
-        $in: buscadorVentaDto.tipoVenta.map((i) => new Types.ObjectId(i)),
-      };
-    }
-
-    if (buscadorVentaDto.flagVenta === FlagVentaE.realizadas) {
-      filtroVenta.fechaVenta = {
-        $gte: buscadorVentaDto.fechaInicio,
-        $lte: buscadorVentaDto.fechaFin,
-      };
-    } else if (buscadorVentaDto.flagVenta === FlagVentaE.finalizadas) {
-      filtroVenta.fechaFinalizacion = {
-        $gte: buscadorVentaDto.fechaInicio,
-        $lte: buscadorVentaDto.fechaFin,
-      };
-    }
-
-    if (buscadorVentaDto.comisiona != null) {
-      filtroVenta.comisiona = buscadorVentaDto.comisiona;
-    }
+    const filtroVenta = filtradorVenta(buscadorVentaDto)
 
 
     const resultados = await Promise.all(

@@ -308,8 +308,6 @@ export class VentaRendimientoDiarioService {
     buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
   ) {
     const filter = filtradorVenta(buscadorRendimientoDiarioDto);
-    console.log(buscadorRendimientoDiarioDto);
-
     let agrupacion = {};
     if (buscadorRendimientoDiarioDto.flagVenta == FlagVentaE.realizadas) {
       agrupacion = {
@@ -492,6 +490,8 @@ export class VentaRendimientoDiarioService {
             $sort: { fechaVenta: -1 },
           },
         ]);
+        
+        
         const data = await this.ventasFormateada(venta,sucursalId);
 
         return {

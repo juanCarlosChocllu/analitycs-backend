@@ -23,8 +23,7 @@ export class BuscadorRendimientoDiarioDto  {
   asesor: Types.ObjectId[];
 
   @IsMongoId({ each: true })
-  @IsOptional()
-  @IsArray({each:true})
+  @IsArray()
   tipoVenta: Types.ObjectId[];
 
   @IsNotEmpty()
