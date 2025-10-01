@@ -113,7 +113,7 @@ export class VentaRendimientoDiarioService {
                     entregadas: {
                       $sum: {
                         $cond: {
-                          if: { $eq: ['$flag', 'FINALIZADO'] },
+                          if: { $eq: ['$flagVenta', 'FINALIZADO'] },
                           then: 1,
                           else: 0,
                         },
