@@ -582,7 +582,7 @@ export class VentaService {
         asesor: asesor.nombre,
         ...resultadoFinal,
       };
-      console.log(data);
+
       
       venPorAsesor.push(data);
     }

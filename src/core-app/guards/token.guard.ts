@@ -11,8 +11,8 @@ import { Observable } from 'rxjs';
 
 import { Request } from 'express';
 import { UsuarioService } from 'src/usuario/usuario.service';
-import { jwtConstants } from 'src/autenticacion/Constants/jwtConstants';
-import { PUBLIC_KEY } from 'src/autenticacion/decorators/keys';
+import { jwtConstants } from 'src/core-app/Constants/jwtConstants';
+import { PUBLIC_KEY } from 'src/core-app/decorators/keys';
 
 @Injectable()
 export class TokenGuard implements CanActivate {
@@ -41,6 +41,7 @@ export class TokenGuard implements CanActivate {
           request.usuario = {
             detalleAsesor: usuario.detalleAsesor ? usuario.detalleAsesor : null,
             idUsuario: usuario?.id,
+            rol:usuario.rol
           };
           return true;
         }

@@ -13,7 +13,7 @@ import {
 import { Types } from 'mongoose';
 import { FlagVentaE } from 'src/venta/enum/ventaEnum';
 
-export class BuscadorRendimientoDiarioDto  {
+export class BuscadorRendimientoDiarioDto {
   @IsMongoId({ each: true })
   @IsNotEmpty()
   sucursal: Types.ObjectId[];
@@ -32,22 +32,22 @@ export class BuscadorRendimientoDiarioDto  {
 
   @IsOptional()
   @IsBoolean()
-  comisiona: boolean ;
-    @IsDate()
-    @IsNotEmpty()
-    @Transform(({ value }: { value: string }) => {
-      const date = new Date(value);
-      date.setUTCHours(0, 0, 0, 0);
-      return date;
-    })
-    fechaInicio: Date;
-  
-    @IsDate()
-    @IsNotEmpty()
-    @Transform(({ value }: { value: string }) => {  
-      const date = new Date(value);
-      date.setUTCHours(23, 59, 59);
-      return date;
-    })
-    fechaFin: Date;
+  comisiona: boolean;
+  @IsDate()
+  @IsNotEmpty()
+  @Transform(({ value }: { value: string }) => {
+    const date = new Date(value);
+    date.setUTCHours(0, 0, 0, 0);
+    return date;
+  })
+  fechaInicio: Date;
+
+  @IsDate()
+  @IsNotEmpty()
+  @Transform(({ value }: { value: string }) => {
+    const date = new Date(value);
+    date.setUTCHours(23, 59, 59);
+    return date;
+  })
+  fechaFin: Date;
 }
