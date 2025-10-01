@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { DetalleCotizacion } from './schema/detalleContizacion';
 import { CotizacionI, DetalleCotizacionI } from './interface/cotizacion';
+import { BuscadorCotizacionDto } from './dto/BuscadorCotizacion.dto';
 
 @Injectable()
 export class CotizacionService {
@@ -50,7 +51,7 @@ export class CotizacionService {
     fechaFin: Date,
     sucursal: Types.ObjectId,
   ) {
-   const detalle = await this.detalleCotizacion.aggregate([
+    const detalle = await this.detalleCotizacion.aggregate([
       {
         $match: {
           rubro: { $in: rubro },
@@ -111,14 +112,82 @@ export class CotizacionService {
       }
     ])*/
 
-    
     return detalle.length;
   }
-  
-  contarCotizaciones (sucursal:Types.ObjectId, fechaInicio:Date, fechaFin:Date ){
-    return this.cotizacion.countDocuments({sucursal:new  Types.ObjectId(sucursal), fechaCotizacion:{
-      $gte:fechaInicio,
-      $lte:fechaFin
-    }})
+
+  contarCotizaciones(
+    sucursal: Types.ObjectId,
+    fechaInicio: Date,
+    fechaFin: Date,
+  ) {
+    return this.cotizacion.countDocuments({
+      sucursal: new Types.ObjectId(sucursal),
+      fechaCotizacion: {
+        $gte: fechaInicio,
+        $lte: fechaFin,
+      },
+    });
+  }
+
+  async reporteCotizacion(buscadorCotizacionDto: BuscadorCotizacionDto) {
+    const cotizacion = await this.cotizacion.aggregate([
+      {
+        $match: {
+          sucursal :{$in:buscadorCotizacionDto.sucursal.map((item)=> new Types.ObjectId(item))},
+          fechaCotizacion: {
+            $gte: buscadorCotizacionDto.fechaInicio,
+            $lte: buscadorCotizacionDto.fechaFin,
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'DetalleCotizacion',
+          foreignField: 'cotizacion',
+          localField: '_id',
+          as: 'detalleCotizacion',
+        },
+      },
+      {
+        $lookup: {
+          from: 'Sucursal',
+          foreignField: '_id',
+          localField: 'sucursal',
+          as: 'sucursal',
+        },
+      },
+      {
+        $lookup: {
+          from: 'DetalleAsesor',
+          foreignField: '_id',
+          localField: 'detalleAsesor',
+          as: 'detalleAsesor',
+        },
+      },
+      {
+        $lookup: {
+          from: 'Asesor',
+          foreignField: '_id',
+          localField: 'detalleAsesor.0.asesor',
+          as: 'asesor',
+        },
+      },
+      {
+        $project: {
+          codigo: 1,
+          noCompra: 1,
+          fechaCotizacion: 1,
+          asesor: { $arrayElemAt: ['$asesor.nombre', 0] },
+          sucursal: { $arrayElemAt: ['$sucursal.nombre', 0] },
+          total1: 1,
+          total2: 1,
+          detalleCotizacion: 1,
+          venta: 1,
+          id_venta: 1,
+        },
+      },
+    ]);
+
+    return cotizacion;
   }
 }

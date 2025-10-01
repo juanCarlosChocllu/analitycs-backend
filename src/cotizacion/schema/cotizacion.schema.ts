@@ -27,6 +27,7 @@ export class Cotizacion extends BaseSchema {
   @Prop()
   recetaVenta:number
 
+  
 }
 export const cotizacionSchema = SchemaFactory.createForClass(Cotizacion);
 cotizacionSchema.index({sucursal:1,fechaCotizacion:1})

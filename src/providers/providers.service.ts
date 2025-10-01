@@ -445,6 +445,7 @@ export class ProvidersService {
         total1: cot.total1 ? cot.total1 : 0,
         total2: cot.total2 ? cot.total2 : 0,
         noCompra: cot.motivoNoCompra,
+         ...(cot.id_venta && { id_venta: cot.id_venta }),
         detalleMedico: detalleMedico._id,
         ...(cot.id_venta && { id_venta: cot.id_venta }),
         ...(cot.recetaVenta && { recetaVenta: cot.recetaVenta }),
