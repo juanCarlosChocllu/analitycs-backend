@@ -561,7 +561,7 @@ export class VentaService {
 
         this.venta.aggregate(pipline),
       ]);
-      console.log(sucursal,asesor.idSucursal);
+      
       
       const resultadoFinal =
         resultado.length > 0

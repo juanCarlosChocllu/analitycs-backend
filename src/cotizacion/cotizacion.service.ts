@@ -5,6 +5,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DetalleCotizacion } from './schema/detalleContizacion';
 import { CotizacionI, DetalleCotizacionI } from './interface/cotizacion';
 import { BuscadorCotizacionDto } from './dto/BuscadorCotizacion.dto';
+import { formaterFechaHora } from 'src/core-app/utils/coreAppUtils';
+import { Type } from 'class-transformer';
 
 @Injectable()
 export class CotizacionService {
@@ -189,5 +191,12 @@ export class CotizacionService {
     ]);
 
     return cotizacion;
+  }
+
+
+  async cantidadCotizacionesPresupuesto(fecha:string, sucursal:Types.ObjectId){ 
+      const {f1,f2} = formaterFechaHora(fecha, fecha)
+      return this.cotizacion.countDocuments({fechaCotizacion:{$gte:f1,$lte:f2}, sucursal:new Types.ObjectId(sucursal)})
+      
   }
 }

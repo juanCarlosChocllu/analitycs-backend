@@ -17,6 +17,7 @@ import { SucursalService } from 'src/sucursal/sucursal.service';
 import { MetasSucursalService } from 'src/metas-sucursal/services/metas-sucursal.service';
 import { AsesorService } from 'src/asesor/asesor.service';
 import { RendimientoDiarioService } from 'src/rendimiento-diario/rendimiento-diario.service';
+import { CotizacionService } from 'src/cotizacion/cotizacion.service';
 
 @Injectable()
 export class VentaRendimientoDiarioService {
@@ -28,7 +29,8 @@ export class VentaRendimientoDiarioService {
     private readonly sucursalService: SucursalService,
     private readonly metasSucursalService: MetasSucursalService,
     private readonly asesorService: AsesorService,
-       private readonly rendimientoDiarioService : RendimientoDiarioService,
+    private readonly rendimientoDiarioService: RendimientoDiarioService,
+    private readonly cotizacionService: CotizacionService,
   ) {}
 
   async ventasParaRendimientoDiario(
@@ -177,7 +179,7 @@ export class VentaRendimientoDiarioService {
         const resultado: resultadRendimientoDiarioI = {
           metaTicket: metas ? metas.ticket : 0,
           diasComerciales: metas ? metas.dias : 0,
-          sucursal: sucursal ? sucursal.nombre :"Sin sucursal",
+          sucursal: sucursal ? sucursal.nombre : 'Sin sucursal',
           metaMonto: metas ? metas.monto : 0,
           ventaAsesor: ventaAsesorFiltrado,
         };
@@ -187,7 +189,6 @@ export class VentaRendimientoDiarioService {
 
     return dataVenta;
   }
-
 
   /*async ventasParaRendimientoDiarioAsesor(
     request: Request,
@@ -306,10 +307,9 @@ export class VentaRendimientoDiarioService {
   async ventaMentaPorAsesor(
     buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
   ) {
-  
     const filter = filtradorVenta(buscadorRendimientoDiarioDto);
     console.log(buscadorRendimientoDiarioDto);
-    
+
     let agrupacion = {};
     if (buscadorRendimientoDiarioDto.flagVenta == FlagVentaE.realizadas) {
       agrupacion = {
@@ -411,16 +411,15 @@ export class VentaRendimientoDiarioService {
         return resultado;
       }),
     );
-    console.log(dataVenta);
-    
     return dataVenta;
   }
 
-   async avanceLocal(
+  async avanceLocal(
     buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
   ) {
     const filter = filtradorVenta(buscadorRendimientoDiarioDto);
     let agrupacion = {};
+    
     if (buscadorRendimientoDiarioDto.flagVenta == FlagVentaE.realizadas) {
       agrupacion = {
         aqo: { $year: '$fechaVenta' },
@@ -435,19 +434,20 @@ export class VentaRendimientoDiarioService {
       };
     }
 
+    
     const data = await Promise.all(
-      buscadorRendimientoDiarioDto.sucursal.map(async (item) => {
+      buscadorRendimientoDiarioDto.sucursal.map(async (sucursalId) => {
         const [sucursal, metas] = await Promise.all([
-          this.sucursalService.buscarSucursalPorId(item),
+          this.sucursalService.buscarSucursalPorId(sucursalId),
           this.metasSucursalService.listarMetasPorSucursal(
-            item,
+            sucursalId,
             buscadorRendimientoDiarioDto.fechaInicio,
           ),
         ]);
         const venta: ventaAvanceLocalI[] = await this.venta.aggregate([
           {
             $match: {
-              sucursal: new Types.ObjectId(item),
+              sucursal: new Types.ObjectId(sucursalId),
               ...filter,
             },
           },
@@ -462,7 +462,7 @@ export class VentaRendimientoDiarioService {
               ventasFinalizadas: {
                 $sum: {
                   $cond: {
-                    if: { $eq: ['$flag', 'FINALIZADO'] },
+                    if: { $eq: ['$flagVenta', 'FINALIZADO'] },
                     then: 1,
                     else: 0,
                   },
@@ -492,12 +492,10 @@ export class VentaRendimientoDiarioService {
             $sort: { fechaVenta: -1 },
           },
         ]);
-  
-
-        const data = await this.ventasFormateada(venta);
+        const data = await this.ventasFormateada(venta,sucursalId);
 
         return {
-          sucursal: sucursal ? sucursal.nombre : "Sin sucursal",
+          sucursal: sucursal ? sucursal.nombre : 'Sin sucursal',
           metaTicket: metas ? metas.ticket : 0,
           metaMonto: metas ? metas.monto : 0,
           diasComerciales: metas ? metas.dias : 0,
@@ -505,9 +503,13 @@ export class VentaRendimientoDiarioService {
         };
       }),
     );
+ 
+
     return data;
   }
-  private async ventasFormateada(venta: ventaAvanceLocalI[]) {
+  private async ventasFormateada(venta: ventaAvanceLocalI[], sucursal:Types.ObjectId) {
+   
+    
     return Promise.all(
       venta.map(async (item) => {
         let atenciones: number = 0;
@@ -525,10 +527,12 @@ export class VentaRendimientoDiarioService {
             presupuestos += re.presupuesto;
           }
         }
+
+        const cotizaciones = await this.cotizacionService.cantidadCotizacionesPresupuesto(item.fecha,sucursal )
         return {
           atenciones: atenciones,
           feha: item.fecha,
-          presupuestos: presupuestos,
+          presupuestos: cotizaciones ?  cotizaciones : presupuestos,
           vendidos: item.ventasRelizadas,
           entregadas: item.ventasFinalizadas,
           //asesore: item.asesores,

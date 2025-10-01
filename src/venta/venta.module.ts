@@ -33,6 +33,7 @@ import { RecetaModule } from 'src/receta/receta.module';
     RendimientoDiarioModule,
     DiasModule,
     RecetaModule,
+    CotizacionModule,
     MongooseModule.forFeature([
       { name: Venta.name, schema: ventaSchema },
       { name: DetalleVenta.name, schema: detalleVentaSchema },
