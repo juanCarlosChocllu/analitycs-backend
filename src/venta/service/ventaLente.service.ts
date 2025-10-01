@@ -145,11 +145,9 @@ export class VentaLentService {
 
   async kpiEmpresas(kpiEmpresaDto: BuscadorVentaLenteDto) {
     const dataEmpresas: any = [];
-    console.log("kpiEmpresaDto",kpiEmpresaDto);
     for (let e of kpiEmpresaDto.empresa) {
       const sucursales: any[] = [];
       const empresa: any = await this.empresaService.buscarEmpresa(e);
-      console.log(empresa);
       if (kpiEmpresaDto.sucursal.length > 0) {
         const sucursalesPromises = kpiEmpresaDto.sucursal.map((s) =>
           this.surcursalService.listarSucursalId(new Types.ObjectId(s)),
@@ -208,8 +206,6 @@ export class VentaLentService {
     sucursales: any[],
   ) {
     const filtrador = filtradorVenta(kpiEmpresaDto);
-    const sucursalesIds = sucursales.map((sucursal) => sucursal);
-    console.log('filtrador', { ...filtrador, sucursal: sucursalesIds });
     const data: any[] = [];
 
     for (let sucursal of sucursales) {
@@ -459,8 +455,7 @@ export class VentaLentService {
     sucursales: any[],
   ) {
     const filtrador = filtradorVenta(kpiEmpresaDto);
-    const sucursalesIds = sucursales.map((sucursal) => sucursal);
-    console.log('filtrador Econovision', { ...filtrador, sucursal: sucursalesIds });
+
     const data: any[] = [];
 
     for (let sucursal of sucursales) {
@@ -722,7 +717,7 @@ export class VentaLentService {
       const resultado = {
         sucursal: sucursal.nombre || sucursal, // Manejar caso donde sucursal sea solo el ID
         id: sucursal._id || sucursal,
-        dataKpi: dataKpi[0] || {
+        dataKpi: dataKpi || [{
           // Asegurar que siempre haya un objeto resultado
           lentes: 0,
           antireflejo: 0,
@@ -737,7 +732,7 @@ export class VentaLentService {
           porcentajeOcupacionales: 0,
           fotosensibles: 0,
           procentajeFotosensibles: 0,
-        },
+        }],
       };
 
       data.push(resultado);
@@ -751,8 +746,6 @@ export class VentaLentService {
     sucursales: any[],
   ) {
     const filtrador = filtradorVenta(kpiEmpresaDto);
-    const sucursalesIds = sucursales.map((sucursal) => sucursal);
-    console.log('filtrador', { ...filtrador, sucursal: sucursalesIds });
     const data: any[] = [];
 
     for (let sucursal of sucursales) {
@@ -1015,7 +1008,7 @@ export class VentaLentService {
       const resultado = {
         sucursal: sucursal.nombre || sucursal, // Manejar caso donde sucursal sea solo el ID
         id: sucursal._id || sucursal,
-        dataKpi: dataKpi[0] || {
+        dataKpi: dataKpi || [{
           // Asegurar que siempre haya un objeto resultado
           lentes: 0,
           antireflejo: 0,
@@ -1030,7 +1023,7 @@ export class VentaLentService {
           porcentajeOcupacionales: 0,
           fotosensibles: 0,
           procentajeFotosensibles: 0,
-        },
+        }],
       };
 
       data.push(resultado);
@@ -1044,8 +1037,7 @@ export class VentaLentService {
     sucursales: any[],
   ) {
     const filtrador = filtradorVenta(kpiEmpresaDto);
-    const sucursalesIds = sucursales.map((sucursal) => sucursal);
-    console.log('filtrador', { ...filtrador, sucursal: sucursalesIds });
+
     const data: any[] = [];
 
     for (let sucursal of sucursales) {
@@ -1237,7 +1229,7 @@ export class VentaLentService {
       const resultado = {
         sucursal: sucursal.nombre || sucursal, // Manejar caso donde sucursal sea solo el ID
         id: sucursal._id || sucursal,
-        dataKpi: dataKpi[0] || {
+        dataKpi: dataKpi || [{
           // Asegurar que siempre haya un objeto resultado
           monturas: 0,
           lentes: 0,
@@ -1248,7 +1240,7 @@ export class VentaLentService {
           porcentajeProgresivos: 0,
           porcentajeAntireflejo: 0,
           procentajeFotoCromatico: 0,
-        },
+        }],
       };
 
       data.push(resultado);
@@ -1256,6 +1248,286 @@ export class VentaLentService {
 
     return data;
   }
+  async kpiInformacion(
+    sucursal: Types.ObjectId,
+    detalleVentaDto: DetalleVentaDto,
+  ) {
+    const filtrador = detallleVentaFilter(detalleVentaDto);
+    const [antireflejo, progresivos, ocupacional, su] = await Promise.all([
+      this.kpiAntireflejo(filtrador,sucursal),
+      this.kpiProgresivos(filtrador,sucursal),
+      this.kpiOcupacional(filtrador,sucursal),
+      this.surcursalService.listarSucursalId(new Types.ObjectId(sucursal)),
+    ]);
+    return { antireflejo, progresivos, ocupacional, sucursal: su.nombre };
+  }
 
+  private async kpiAntireflejo(filtrador: FiltroVentaI,sucursal: Types.ObjectId) {
+    const pipeline = [
+     {
+      $match: {
+        ...filtrador,
+        sucursal: new Types.ObjectId(sucursal),
+      },
+     },
+     {
+      $lookup: {
+        from: 'DetalleVenta',
+        localField: '_id',
+        foreignField: 'venta',
+        as: 'detalleVenta',
+      },
+    },
+    {
+      $unwind: { path: '$detalleVenta', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $lookup: {
+        from: 'Receta',
+        localField: 'detalleVenta.receta',
+        foreignField: '_id',
+        as: 'receta',
+      },
+    },
+    {
+      $unwind: { path: '$receta', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $lookup: {
+        from: 'Tratamiento',
+        localField: 'receta.tratamiento',
+        foreignField: '_id',
+        as: 'tratamiento',
+      },
+    },
+    {
+      $unwind: { path: '$tratamiento', preserveNullAndEmptyArrays: true },
+    },
+    //agrupar 
+    {
+      $match: {
+        'detalleVenta.rubro': { $eq: 'LENTE' },
+      },
+     },
+    {
+      $group:{
+        _id: '$tratamiento.nombre',
+        cantidad:{
+          $sum: '$detalleVenta.cantidad'
+        }
+
+      }
+    },
+    {
+      $group:{
+        _id:null,
+        lentes:{
+          $sum: '$cantidad',
+        },
+        tratamientos:{
+          $push:{
+            tratamiento:'$_id',
+            cantidad:'$cantidad'
+          }
+        }
+      }
+    },
+    {
+      $project:{
+        _id:0,
+        lentes: '$lentes',
+        tratamiento:{
+          $map:{
+            input:'$tratamientos',
+            as:'trata',
+            in:{
+              tratamiento:'$$trata.tratamiento',
+              cantidad:'$$trata.cantidad',
+              porcentaje:{
+                $round:[
+                  {
+                    $multiply:[
+                      {
+                        $divide:[
+                          '$$trata.cantidad',
+                          '$lentes'
+                        ]
+                      },
+                      100
+                    ]
+                  }
+                ]
+              }
+              
+            } 
+          }
+        }
+      }
+    }
+    
+  
+    
+    ];
+    const result = await this.venta.aggregate(pipeline);
+    return result;
+  }
+
+  private async kpiProgresivos(filtrador: FiltroVentaI,sucursal: Types.ObjectId) {
+    const pipeline = [
+      {
+       $match: {
+         ...filtrador,
+         sucursal: new Types.ObjectId(sucursal),
+       },
+      },
+      {
+       $lookup: {
+         from: 'DetalleVenta',
+         localField: '_id',
+         foreignField: 'venta',
+         as: 'detalleVenta',
+       },
+     },
+     {
+       $unwind: { path: '$detalleVenta', preserveNullAndEmptyArrays: true },
+     },
+     {
+       $lookup: {
+         from: 'Receta',
+         localField: 'detalleVenta.receta',
+         foreignField: '_id',
+         as: 'receta',
+       },
+     },
+     {
+       $unwind: { path: '$receta', preserveNullAndEmptyArrays: true },
+     },
+     {
+       $lookup: {
+         from: 'Tratamiento',
+         localField: 'receta.tratamiento',
+         foreignField: '_id',
+         as: 'tratamiento',
+       },
+     },
+     {
+       $unwind: { path: '$tratamiento', preserveNullAndEmptyArrays: true },
+     },
+     {
+       $lookup: {
+         from: 'TipoLente',
+         localField: 'receta.tipoLente',
+         foreignField: '_id',
+         as: 'tipoLente',
+       },
+     },
+     {
+       $unwind: { path: '$tipoLente', preserveNullAndEmptyArrays: true },
+     },
+     {
+      $lookup: {
+        from: 'MarcaLente',
+        localField: 'receta.marcaLente',
+        foreignField: '_id',
+        as: 'marcaLente',
+      },
+    },
+    {
+      $unwind: { path: '$marcaLente', preserveNullAndEmptyArrays: true },
+    },
+    //agrupar
+     {
+      $match: {
+        'tipoLente.nombre': { $eq: 'PROGRESIVO' },
+      },
+     },
+     {
+      $group: {
+        _id: '$marcaLente.nombre',
+        cantidad: { $sum: '$detalleVenta.cantidad' },
+      },
+      },
+    ];
+    const progresivos = await this.venta.aggregate(pipeline);
+    return progresivos;
+  }
+
+  private async kpiOcupacional(filtrador: FiltroVentaI,sucursal: Types.ObjectId) {
+    const pipeline = [
+      {
+       $match: {
+         ...filtrador,
+         sucursal: new Types.ObjectId(sucursal),
+       },
+      },
+      {
+       $lookup: {
+         from: 'DetalleVenta',
+         localField: '_id',
+         foreignField: 'venta',
+         as: 'detalleVenta',
+       },
+     },
+     {
+       $unwind: { path: '$detalleVenta', preserveNullAndEmptyArrays: true },
+     },{
+       $lookup: {
+         from: 'Receta',
+         localField: 'detalleVenta.receta',
+         foreignField: '_id',
+         as: 'receta',
+       },
+     },
+     {
+       $unwind: { path: '$receta', preserveNullAndEmptyArrays: true },
+     },
+     {
+       $lookup: {
+         from: 'Tratamiento',
+         localField: 'receta.tratamiento',
+         foreignField: '_id',
+         as: 'tratamiento',
+       },
+     },
+     {
+       $unwind: { path: '$tratamiento', preserveNullAndEmptyArrays: true },
+     },
+     {
+       $lookup: {
+         from: 'TipoLente',
+         localField: 'receta.tipoLente',
+         foreignField: '_id',
+         as: 'tipoLente',
+       },
+     },
+     {
+       $unwind: { path: '$tipoLente', preserveNullAndEmptyArrays: true },
+     },
+     {
+      $lookup: {
+        from: 'MarcaLente',
+        localField: 'receta.marcaLente',
+        foreignField: '_id',
+        as: 'marcaLente',
+      },
+    },
+    {
+      $unwind: { path: '$marcaLente', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $match: {
+        'tipoLente.nombre': { $eq: 'OCUPACIONAL' },
+      },
+     },
+     {
+      $group: {
+        _id: '$marcaLente.nombre',
+        cantidad: { $sum: '$detalleVenta.cantidad' },
+      },
+      },
+    ];
+    const progresivos = await this.venta.aggregate(pipeline);
+    return progresivos;
+  }
 
 }

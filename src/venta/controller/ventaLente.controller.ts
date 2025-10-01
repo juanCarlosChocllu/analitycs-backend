@@ -12,8 +12,6 @@ export class VentaLenteController {
 
   @Post('kpi/empresas/lentes')
   kpiLentes(@Body() kpiEmpresaDto: BuscadorVentaLenteDto) {
-    console.log('hola');
-
     return this.ventaLentService.kpiEmpresas(kpiEmpresaDto);
   }
 
@@ -29,4 +27,6 @@ export class VentaLenteController {
   ) {
     return this.ventaLentService.kpiInformacion(sucursal, informacionVentaDto);
   }
+  
+
 }
