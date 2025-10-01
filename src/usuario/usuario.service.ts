@@ -68,6 +68,7 @@ export class UsuarioService {
       {
         $match: {
           flag: Flag.nuevo,
+             rol: { $eq: 'ADMINISTRADOR' },
         },
       },
 
