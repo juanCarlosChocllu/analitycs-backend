@@ -1,32 +1,32 @@
-
-import { Controller, Post, Body } from "@nestjs/common";
-import { VentaLentService } from "../service/ventaLente.service";
-import { BuscadorVentaLenteDto } from "../dto/BuscadorVentaLente.dto";
-
-import { Body, Controller, Post } from "@nestjs/common";
-import { VentaLentService } from "../service/ventaLente.service";
-import { BuscadorVentaDto } from "../dto/BuscadorVenta.dto";
-
+import { Controller, Post, Body, Param } from '@nestjs/common';
+import { VentaLentService } from '../service/ventaLente.service';
+import { BuscadorVentaLenteDto } from '../dto/BuscadorVentaLente.dto';
+import { BuscadorVentaDto } from '../dto/BuscadorVenta.dto';
+import { ValidacionIdPipe } from 'src/core-app/utils/validacion-id/validacion-id.pipe';
+import { Types } from 'mongoose';
+import { DetalleVentaDto } from '../dto/DetalleVenta.dto';
 
 @Controller('venta')
 export class VentaLenteController {
-  constructor(
- 
-    private readonly ventaLentService: VentaLentService,
-  ) {}
+  constructor(private readonly ventaLentService: VentaLentService) {}
 
   @Post('kpi/empresas/lentes')
   kpiLentes(@Body() kpiEmpresaDto: BuscadorVentaLenteDto) {
     console.log('hola');
-    
+
     return this.ventaLentService.kpiEmpresas(kpiEmpresaDto);
   }
 
-
-    @Post('kpi/material')
+  @Post('kpi/material')
   kpiMaterial(@Body() kpiDto: BuscadorVentaDto) {
     return this.ventaLentService.kpiMaterial(kpiDto);
   }
 
-
+  @Post('kpi/informacion/:sucursal')
+  kpiInformacion(
+    @Param('sucursal', new ValidacionIdPipe()) sucursal: Types.ObjectId,
+    @Body() informacionVentaDto: DetalleVentaDto,
+  ) {
+    return this.ventaLentService.kpiInformacion(sucursal, informacionVentaDto);
+  }
 }

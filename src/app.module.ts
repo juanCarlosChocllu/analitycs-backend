@@ -74,9 +74,9 @@ import { LogModule } from './log/log.module';
     LogModule
   ],
   controllers: [],
-  providers: [ {
+  /*providers: [ {
       provide:APP_GUARD,
       useClass:TokenGuard
-    }],
+    }],*/
 })
 export class AppModule {}

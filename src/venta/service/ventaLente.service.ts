@@ -2,22 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { DetalleVenta } from '../schema/detalleVenta';
 import { Venta } from '../schema/venta.schema';
-
-import { Model } from 'mongoose';
-import { EmpresaService } from 'src/empresa/empresa.service';
-import { SucursalService } from 'src/sucursal/sucursal.service';
-import { BuscadorVentaLenteDto } from '../dto/BuscadorVentaLente.dto';
-import { EmpresaE } from '../enum/empresa.enum';
-import { Types } from 'mongoose';
-import { FiltroVentaI } from '../interface/venta';
-import { filtradorVenta } from '../utils/filtroVenta';
-import { BuscadorVentaDto } from '../dto/BuscadorVenta.dto';
-
 import { Model, Types } from 'mongoose';
 import { BuscadorVentaDto } from '../dto/BuscadorVenta.dto';
 import { filtradorVenta } from '../utils/filtroVenta';
-import { Type } from 'class-transformer';
 import { ProductoE } from 'src/core-app/enum/coreEnum';
+import { EmpresaService } from 'src/empresa/empresa.service';
+import { SucursalService } from 'src/sucursal/sucursal.service';
+import { BuscadorVentaLenteDto } from '../dto/BuscadorVentaLente.dto';
+import { detallleVentaFilter } from '../utils/detalleVenta.util';
+import { DetalleVentaDto } from '../dto/DetalleVenta.dto';
+import { FiltroVentaI } from '../interface/venta';
 
 
 @Injectable()
@@ -27,33 +21,126 @@ export class VentaLentService {
     private readonly venta: Model<Venta>,
     @InjectModel(DetalleVenta.name)
     private readonly detalleVenta: Model<DetalleVenta>,
-
     private readonly empresaService: EmpresaService,
     private readonly surcursalService: SucursalService,
   ) {}
 
-  private readonly kpiPorCompania: Record<
-    string,
-    (dto: BuscadorVentaDto, sucursal: any[]) => Promise<any>
-  > = {
-    [EmpresaE.OPTICENTRO]: this.kpiOpticentroEmpresa,
-    [EmpresaE.ECONOVISION]: this.kpiEconovisionEmpresa,
-    [EmpresaE.TU_OPTICA]: this.kpiTuOpticaEmpresa,
-    [EmpresaE.OPTISERVICE]: this.kpiOptiserviceEmpresa,
-  };
+  public async kpiMaterial(kpiDto: BuscadorVentaDto) {
+    const data: any[] = [];
+    const filtrador = filtradorVenta(kpiDto);
+    for (let su of kpiDto.sucursal) {
+      const kpiMaterial = await this.venta.aggregate([
+        {
+          $match: {
+            ...filtrador,
+            sucursal: new Types.ObjectId(su),
+          },
+        },
+        {
+          $lookup: {
+            from: 'Sucursal',
+            foreignField: '_id',
+            localField: 'sucursal',
+            as: 'sucursal',
+          },
+        },
+        {
+          $lookup: {
+            from: 'DetalleVenta',
+            foreignField: 'venta',
+            localField: '_id',
+            as: 'detalleVenta',
+          },
+        },
+        {
+          $unwind: { path: '$detalleVenta', preserveNullAndEmptyArrays: false },
+        },
+        {
+          $match: {
+            'detalleVenta.rubro': ProductoE.lente,
+          },
+        },
+        {
+          $lookup: {
+            from: 'Receta',
+            foreignField: '_id',
+            localField: 'detalleVenta.receta',
+            as: 'receta',
+          },
+        },
+        {
+          $lookup: {
+            from: 'Material',
+            foreignField: '_id',
+            localField: 'receta.0.material',
+            as: 'material',
+          },
+        },
 
-  private async sucursalesPorCompania(
-    empresaId: Types.ObjectId,
-    sucursalIds: string[],
-  ) {
-    if (sucursalIds?.length) {
-      const tasks = sucursalIds.map((sucursalId) =>
-        this.surcursalService.listarSucursalId(new Types.ObjectId(sucursalId)),
-      );
-      const sucursales = await Promise.all(tasks);
-      return sucursales;
+        {
+          $unwind: { path: '$material', preserveNullAndEmptyArrays: false },
+        },
+
+        {
+          $group: {
+            _id: '$material.nombre',
+            cantidad: { $sum: '$detalleVenta.cantidad' },
+            sucursalNombre: {
+              $first: { $arrayElemAt: ['$sucursal.nombre', 0] },
+            },
+          },
+        },
+
+        {
+          $group: {
+            _id: null,
+            lentes: {
+              $sum: '$cantidad',
+            },
+            materiales: {
+              $push: {
+                nombre: '$_id',
+                cantidad: '$cantidad',
+              },
+            },
+            sucursalNombre: { $first: '$sucursalNombre' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            lentes: 1,
+            sucursal: '$sucursalNombre',
+            materiales: {
+              $map: {
+                input: '$materiales',
+                as: 'material',
+                in: {
+                  nombre: '$$material.nombre',
+                  cantidad: '$$material.cantidad',
+                  porcentaje: {
+                    $round: [
+                      {
+                        $multiply: [
+                          { $divide: ['$$material.cantidad', '$lentes'] },
+                          100,
+                        ],
+                      },
+                      0,
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      ]);
+      const resultado = {
+        kpiMaterial: kpiMaterial[0],
+      };
+      data.push(resultado);
     }
-    return this.surcursalService.sucursalListaEmpresas(empresaId);
+    return data;
   }
 
   async kpiEmpresas(kpiEmpresaDto: BuscadorVentaLenteDto) {
@@ -115,245 +202,7 @@ export class VentaLentService {
     return dataEmpresas;
   }
 
-  private async kpiAntireflejo(filtrador: FiltroVentaI) {
-    const pipeline = [
-      {
-        $match: filtrador,
-      },
-      {
-        $lookup: {
-          from: 'Tratamiento',
-          foreignField: 'tratamiento',
-          localField: 'tratamiento',
-          as: 'tratamiento',
-        },
-      },
-      {
-        $unwind: { path: '$tratamiento', preserveNullAndEmptyArrays: false },
-      },
-      {
-        $group: {
-          _id: '$tratamiento.nombre',
-          cantidad: { $sum: '$cantidad' },
-        },
-      },
-
-      {
-        $group: {
-          _id: null,
-          letes: {
-            $sum: '$cantidad',
-          },
-          tratamientos: {
-            $push: {
-              tratamiento: '$_id',
-              cantidad: '$cantidad',
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          letes: 1,
-          tratamientos: 1,
-        },
-      },
-    ];
-    const result = await this.venta.aggregate(pipeline);
-    return result;
-  }
-
-  private async kpiProgresivos(filtrador: FiltroVentaI) {
-    const pipeline = [
-      {
-        $match: filtrador,
-      },
-      {
-        $lookup: {
-          from: 'MarcaLente',
-          foreignField: '_id',
-          localField: 'marcaLente',
-          as: 'marcaLente',
-        },
-      },
-      {
-        $lookup: {
-          from: 'TipoLente',
-          foreignField: '_id',
-          localField: 'tipoLente',
-          as: 'tipoLente',
-        },
-      },
-      {
-        $unwind: { path: '$marcaLente', preserveNullAndEmptyArrays: false },
-      },
-      {
-        $unwind: { path: '$tipoLente', preserveNullAndEmptyArrays: false },
-      },
-      {
-        $group: {
-          _id: '$marcaLente.nombre',
-          cantidad: { $sum: '$cantidad' },
-        },
-      },
-    ];
-    const progresivos = await this.venta.aggregate(pipeline);
-    return progresivos;
-  }
-
-  private async kpiOcupacional(filtrador: FiltroVentaI) {
-    const pipeline = [
-      {
-        $match: filtrador,
-      },
-      {
-        $lookup: {
-          from: 'MarcaLente',
-          foreignField: '_id',
-          localField: 'marcalente',
-          as: 'marcaLente',
-        },
-      },
-      {
-        $lookup: {
-          from: 'TipoLente',
-          foreignField: '_id',
-          localField: 'tipoLente',
-          as: 'tipoLente',
-        },
-      },
-      {
-        $unwind: { path: '$marcaLente', preserveNullAndEmptyArrays: false },
-      },
-      {
-        $unwind: { path: '$tipoLente', preserveNullAndEmptyArrays: false },
-      },
-      {
-        $match: {
-          'tipoLente.nombre': { $eq: 'OCUPACIONAL' },
-        },
-      },
-      {
-        $group: {
-          _id: '$marcaLente.nombre',
-          cantidad: { $sum: '$cantidad' },
-        },
-      },
-    ];
-    const progresivos = await this.venta.aggregate(pipeline);
-    return progresivos;
-  }
-
-  public async kpiMaterial(kpiDto: BuscadorVentaDto) {
-    const data: any[] = [];
-    const filtrador = filtradorVenta(kpiDto);
-    for (let sucursal of kpiDto.sucursal) {
-      const pipeline = [
-        {
-          $match: {
-            ...filtrador,
-            sucursal: sucursal._id,
-          },
-        },
-        {
-          $lookup: {
-            from: 'Material',
-            foreignField: '_id',
-            localField: 'material',
-            as: 'material',
-=======
-  ) {}
-
-  public async kpiMaterial(kpiDto: BuscadorVentaDto) {
-    const data: any[] = [];
-    const filtrador = filtradorVenta(kpiDto);
-    for (let su of kpiDto.sucursal) {
-      const kpiMaterial = await this.venta.aggregate([
-        {
-          $match: {
-            ...filtrador,
-            sucursal: new Types.ObjectId(su),
-
-          },
-        },
-        {
-          $lookup: {
-            from: 'Sucursal',
-            foreignField: '_id',
-            localField: 'sucursal',
-            as: 'sucursal',
-          },
-        },
-        {
-
-          $unwind: { path: '$material', preserveNullAndEmptyArrays: false },
-        },
-        {
-          $unwind: { path: '$sucursal', preserveNullAndEmptyArrays: false },
-        },
-        {
-          $group: {
-            _id: '$sucursal.nombre',
-            cantidad: { $sum: '$cantidad' },
-            sucursalNombre: { $first: '$sucursal.nombre' },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            lentes: {
-              $sum: '$cantidad',
-            },
-            materiales: {
-              $push: {
-                nombre: '$_id',
-                cantidad: '$cantidad',
-              },
-            },
-            sucursalNombre: { $first: '$sucursalNombre' },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            lentes: 1,
-            sucursalNombre: '$sucursalNombre',
-            materiales: {
-              $map: {
-                input: '$materiales',
-                as: 'material',
-                in: {
-                  nombre: '$$material.nombre',
-                  cantidad: '$$material.cantidad',
-                  porcentaje: {
-                    $round: [
-                      {
-                        $multiply: [
-                          {
-                            $divide: ['$$material.cantidad', '$lentes'],
-                          },
-                          100,
-                        ],
-                      },
-                      0,
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        },
-      ];
-      const kpiMaterial = await this.venta.aggregate(pipeline);
-      const result = {
-        kpiMaterial: kpiMaterial[0],
-      };
-      data.push(result);
-    }
-    return data;
-  }
-
+  
   private async kpiOpticentroEmpresa(
     kpiEmpresaDto: BuscadorVentaLenteDto,
     sucursales: any[],
@@ -376,17 +225,10 @@ export class VentaLentService {
             from: 'DetalleVenta',
             localField: '_id',
             foreignField: 'venta',
-
-          $lookup: {
-            from: 'DetalleVenta',
-            foreignField: 'venta',
-            localField: '_id',
-
             as: 'detalleVenta',
           },
         },
         {
-
           $unwind: { path: '$detalleVenta', preserveNullAndEmptyArrays: true },
         },
         {
@@ -405,25 +247,10 @@ export class VentaLentService {
             from: 'Receta',
             localField: 'detalleVenta.receta',
             foreignField: '_id',
-
-          $unwind: { path: '$detalleVenta', preserveNullAndEmptyArrays: false },
-        },
-        {
-          $match: {
-            'detalleVenta.rubro': ProductoE.lente,
-          },
-        },
-        {
-          $lookup: {
-            from: 'Receta',
-            foreignField: '_id',
-            localField: 'detalleVenta.receta',
-
             as: 'receta',
           },
         },
         {
-
           $unwind: { path: '$receta', preserveNullAndEmptyArrays: true },
         },
         {
@@ -603,9 +430,9 @@ export class VentaLentService {
 
       // CORREGIDO: Acceder correctamente a las propiedades del objeto sucursal
       const resultado = {
-        sucursal: sucursal.nombre || sucursal, // Manejar caso donde sucursal sea solo el ID
-        id: sucursal._id || sucursal,
-        dataKpi: dataKpi[0] || {
+        sucursal: sucursal.nombre,  
+        id: sucursal._id,
+        dataKpi: dataKpi || [{
           // Asegurar que siempre haya un objeto resultado
           lentes: 0,
           monturas: 0,
@@ -618,7 +445,7 @@ export class VentaLentService {
           porcentajeProgresivos: 0,
           porcentajeOcupacionales: 0,
           progresivosOcupacionalesPorcentaje: 0,
-        },
+        }],
       };
 
       data.push(resultado);
@@ -1004,35 +831,10 @@ export class VentaLentService {
           $unwind: { path: '$tipoColor', preserveNullAndEmptyArrays: true },
         },
         // Agrupar y Calcular KPIs
-
-          $lookup: {
-            from: 'Material',
-            foreignField: '_id',
-            localField: 'receta.0.material',
-            as: 'material',
-          },
-        },
-
-        {
-          $unwind: { path: '$material', preserveNullAndEmptyArrays: false },
-        },
-
-        {
-          $group: {
-            _id: '$material.nombre',
-            cantidad: { $sum: '$detalleVenta.cantidad' },
-            sucursalNombre: {
-              $first: { $arrayElemAt: ['$sucursal.nombre', 0] },
-            },
-          },
-        },
-
-
         {
           $group: {
             _id: null,
             lentes: {
-
               $sum: {
                 $cond: {
                   if: { $eq: ['$detalleVenta.rubro', 'LENTE'] },
@@ -1097,22 +899,10 @@ export class VentaLentService {
             },
 
             ventasSet: { $addToSet: '$_id' },
-
-              $sum: '$cantidad',
-            },
-            materiales: {
-              $push: {
-                nombre: '$_id',
-                cantidad: '$cantidad',
-              },
-            },
-            sucursalNombre: { $first: '$sucursalNombre' },
-
           },
         },
         {
           $project: {
-
             lentes: 1,
             antireflejo: 1,
             tickets: {
@@ -1464,40 +1254,8 @@ export class VentaLentService {
       data.push(resultado);
     }
 
-
-            _id: 0,
-            lentes: 1,
-            sucursal: '$sucursalNombre',
-            materiales: {
-              $map: {
-                input: '$materiales',
-                as: 'material',
-                in: {
-                  nombre: '$$material.nombre',
-                  cantidad: '$$material.cantidad',
-                  porcentaje: {
-                    $round: [
-                      {
-                        $multiply: [
-                          { $divide: ['$$material.cantidad', '$lentes'] },
-                          100,
-                        ],
-                      },
-                      0,
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        },
-      ]);
-      const resultado = {
-        kpiMaterial: kpiMaterial[0],
-      };
-      data.push(resultado);
-    }
-
     return data;
   }
+
+
 }
