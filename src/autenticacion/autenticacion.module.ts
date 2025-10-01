@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AutenticacionService } from './autenticacion.service';
 import { AutenticacionController } from './autenticacion.controller';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from './Constants/jwtConstants';
+import { jwtConstants } from '../core-app/Constants/jwtConstants';
 import { UsuarioModule } from 'src/usuario/usuario.module';
 
 @Module({

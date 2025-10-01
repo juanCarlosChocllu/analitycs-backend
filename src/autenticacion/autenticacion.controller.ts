@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AutenticacionService } from './autenticacion.service';
 import { AutenticacionDto } from './dto/create-autenticacion.dto';
-import { Publico } from './decorators/publico';
+import { Publico } from '../core-app/decorators/publico';
 import type { Response } from 'express';
 @Controller('autenticacion')
 export class AutenticacionController {

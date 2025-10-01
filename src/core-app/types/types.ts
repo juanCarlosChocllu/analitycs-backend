@@ -7,6 +7,7 @@ declare global {
       usuario:{
         idUsuario:Types.ObjectId,
         detalleAsesor:Types.ObjectId | null
+        rol:string
       }
       
     }

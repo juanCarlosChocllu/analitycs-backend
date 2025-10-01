@@ -10,3 +10,9 @@ export enum ProductoE {
   servicio = 'SERVICIO',
    lente = 'LENTE',
 }
+
+export enum RolesE {
+  ADMINISTRADOR = 'ADMINISTRADOR',
+  ASESOR = 'ASESOR',
+  GESTOR = 'GESTOR',
+}

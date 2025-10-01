@@ -29,9 +29,10 @@ import { RendimientoDiarioModule } from './rendimiento-diario/rendimiento-diario
 import { UsuarioModule } from './usuario/usuario.module';
 import { AutenticacionModule } from './autenticacion/autenticacion.module';
 import { APP_GUARD } from '@nestjs/core';
-import { TokenGuard } from './core-app/guards/token/token.guard';
+import { TokenGuard } from './core-app/guards/token.guard';
 import { DiasModule } from './dias/dias.module';
 import { LogModule } from './log/log.module';
+import { RolGuard } from './core-app/guards/Rol.Guard';
 
 @Module({
   imports: [
@@ -77,6 +78,11 @@ import { LogModule } from './log/log.module';
   providers: [ {
       provide:APP_GUARD,
       useClass:TokenGuard
-    }],
+    },
+   {
+      provide:APP_GUARD,
+      useClass:RolGuard
+    }
+  ],
 })
 export class AppModule {}
