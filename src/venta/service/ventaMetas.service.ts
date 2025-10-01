@@ -172,8 +172,9 @@ export class VentaMetasService {
           pipeline: [
             {
               $project: {
-                _id:0,
+                _id: 0,
                 rubro: 1,
+
                 importe: 1,
                 descripcion: 1,
               },
@@ -189,10 +190,11 @@ export class VentaMetasService {
           detalleVenta: 1,
           fechaVenta: 1,
           fechaFinalizacion: 1,
+          estadoTracking: 1,
+          flagVenta: 1,
         },
       },
     ]);
-
     return venta;
   }
 }

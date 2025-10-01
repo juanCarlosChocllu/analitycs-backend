@@ -41,6 +41,8 @@ import { RecetaModule } from 'src/receta/receta.module';
 
     RecetaModule,
 
+    CotizacionModule,
+
     MongooseModule.forFeature([
       { name: Venta.name, schema: ventaSchema },
       { name: DetalleVenta.name, schema: detalleVentaSchema },
