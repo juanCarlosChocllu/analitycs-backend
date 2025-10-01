@@ -27,32 +27,26 @@ export class TokenGuard implements CanActivate {
       return true;
     }
     const request: Request = context.switchToHttp().getRequest();
-
     try {
-      const response = request.headers.authorization;
-
-      if (response) {
-        const token = response.split(' ')[1];
-
+      const token: string = request.cookies['ctx'];
+      if (token) {
         const tokenVerificada = await this.jwtService.verify(token, {
           secret: jwtConstants.secret,
         });
 
         const usuario = await this.usuariosService.buscarUsuarioPorId(
           tokenVerificada.id,
-        );
-  
-        
-         if (usuario) {
+        ); 
+        if (usuario) {
           request.usuario = {
             detalleAsesor: usuario.detalleAsesor ? usuario.detalleAsesor : null,
             idUsuario: usuario?.id,
           };
           return true;
         }
-        return false
+        return false;
       }
-      return false
+      return false;
     } catch (error) {
       throw new UnauthorizedException();
     }

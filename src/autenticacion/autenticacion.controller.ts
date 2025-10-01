@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   HttpStatus,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AutenticacionService } from './autenticacion.service';
 import { AutenticacionDto } from './dto/create-autenticacion.dto';
@@ -18,24 +20,28 @@ export class AutenticacionController {
 
   @Post()
   @Publico()
-  async Login(@Body() AutenticacionDto: AutenticacionDto) {
-
-    
+  async Login(
+    @Body() AutenticacionDto: AutenticacionDto,
+    @Res() res: Response,
+  ) {
     try {
-   /*   const {token}= await this.autenticacionService.autenticacion(AutenticacionDto)
-       if (token) {
+      const { token } =
+        await this.autenticacionService.autenticacion(AutenticacionDto);
+
+      if (token) {
         res.cookie('ctx', token, {
           httpOnly: true,
-          secure: true,  Cambiar a true en producción con HTTPS
-          maxAge: 1000 * 60 * 60 * 4,
+          secure: true, //Cambiar a true en producción con HTTPS
+          maxAge: 1000 * 60 * 60 * 4, 
           sameSite: 'strict',
           path: '/',
         });
         return res.json({ status: HttpStatus.OK });
-      }*/
-      return this.autenticacionService.autenticacion(AutenticacionDto)
+      }
+      throw new UnauthorizedException();
+      // return this.autenticacionService.autenticacion(AutenticacionDto)
     } catch (error) {
-    throw error;
-    } 
+      throw error;
+    }
   }
 }
