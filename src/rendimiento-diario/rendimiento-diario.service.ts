@@ -65,6 +65,8 @@ export class RendimientoDiarioService {
     return { status: HttpStatus.CREATED };
   }
   async findAll(buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto) {
+    console.log(buscadorRendimientoDiarioDto);
+    
     const ventas =
       await this.ventaRendimientoDiarioService.ventasParaRendimientoDiario(
         buscadorRendimientoDiarioDto,

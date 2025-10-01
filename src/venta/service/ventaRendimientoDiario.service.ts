@@ -36,7 +36,12 @@ export class VentaRendimientoDiarioService {
   async ventasParaRendimientoDiario(
     buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
   ): Promise<resultadRendimientoDiarioI[]> {
+    console.log(buscadorRendimientoDiarioDto);
+    
     const filter = filtradorVenta(buscadorRendimientoDiarioDto);
+  
+
+      
     let agrupacion = {};
     if (buscadorRendimientoDiarioDto.flagVenta == FlagVentaE.realizadas) {
       agrupacion = {
@@ -308,8 +313,7 @@ export class VentaRendimientoDiarioService {
     buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
   ) {
     const filter = filtradorVenta(buscadorRendimientoDiarioDto);
-    console.log(buscadorRendimientoDiarioDto);
-
+  
     let agrupacion = {};
     if (buscadorRendimientoDiarioDto.flagVenta == FlagVentaE.realizadas) {
       agrupacion = {
