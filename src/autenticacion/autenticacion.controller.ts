@@ -3,11 +3,7 @@ import {
   Res,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   HttpStatus,
-  Req,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AutenticacionService } from './autenticacion.service';
