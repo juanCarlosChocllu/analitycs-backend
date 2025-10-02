@@ -1,4 +1,4 @@
-import { Request } from 'express';
+
 import { Types } from 'mongoose';
 
 declare global {
@@ -8,6 +8,7 @@ declare global {
         idUsuario:Types.ObjectId,
         detalleAsesor:Types.ObjectId | null
         rol:string
+    
       }
       
     }

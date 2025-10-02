@@ -35,6 +35,7 @@ import { LogModule } from './log/log.module';
 import { RolGuard } from './core-app/guards/Rol.Guard';
 import {  ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProxy.Guard';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -54,7 +55,7 @@ import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProx
         uri: config.databaseUrl,
       }),
     }),
-
+      
     VentaModule,
     AsesorModule,
     ColorModule,
@@ -84,7 +85,7 @@ import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProx
     UsuarioModule,
     AutenticacionModule,
     DiasModule,
-    LogModule,
+    LogModule
   ],
   controllers: [],
   providers: [

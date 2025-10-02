@@ -78,3 +78,5 @@ export function tasaConversion(totalConvertidos:number,totalVisitantes:number ):
     return Math.round(resultado)
 }
 
+
+
