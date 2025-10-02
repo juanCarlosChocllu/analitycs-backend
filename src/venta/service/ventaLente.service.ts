@@ -1252,6 +1252,9 @@ export class VentaLentService {
     sucursal: Types.ObjectId,
     detalleVentaDto: DetalleVentaDto,
   ) {
+    console.log(detalleVentaDto);
+    console.log(sucursal);
+
     const filtrador = detallleVentaFilter(detalleVentaDto);
     const [antireflejo, progresivos, ocupacional, su] = await Promise.all([
       this.kpiAntireflejo(filtrador,sucursal),
@@ -1259,6 +1262,7 @@ export class VentaLentService {
       this.kpiOcupacional(filtrador,sucursal),
       this.surcursalService.listarSucursalId(new Types.ObjectId(sucursal)),
     ]);
+    console.log(antireflejo, progresivos, ocupacional, su);
     return { antireflejo, progresivos, ocupacional, sucursal: su.nombre };
   }
 
