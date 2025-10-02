@@ -26,7 +26,7 @@ export class VentaMedicosService {
   public async kpiMedicos(ventaMedicosDto: VentaMedicosDto) {
     const { especialidad, ...nuevoFiltro } = filtradorMedicos(ventaMedicosDto);
     const data: VentaMedicoI[] = [];
-    console.log(nuevoFiltro);
+ 
     
     try {
       for (const empresa of ventaMedicosDto.empresa) {

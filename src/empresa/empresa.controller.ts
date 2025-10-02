@@ -3,7 +3,10 @@ import {
   Get,
 } from '@nestjs/common';
 import { EmpresaService } from './empresa.service';
+import { ROLE } from 'src/core-app/decorators/appDecorators';
+import { RolesE } from 'src/core-app/enum/coreEnum';
 
+@ROLE([RolesE.ADMINISTRADOR])
 @Controller('empresa')
 export class EmpresaController {
   constructor(private readonly empresaService: EmpresaService) {}

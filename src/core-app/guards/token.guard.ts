@@ -6,8 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { log } from 'node:console';
-import { Observable } from 'rxjs';
+
 
 import { Request } from 'express';
 import { UsuarioService } from 'src/usuario/usuario.service';

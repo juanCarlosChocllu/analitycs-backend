@@ -5,7 +5,10 @@ import { ValidacionIdPipe } from "src/core-app/utils/validacion-id/validacion-id
 import { Types } from "mongoose";
 import { DetalleVenta } from "../schema/detalleVenta";
 import { DetalleVentaDto } from "../dto/DetalleVenta.dto";
+import { ROLE } from "src/core-app/decorators/appDecorators";
+import { RolesE } from "src/core-app/enum/coreEnum";
 
+@ROLE([RolesE.ADMINISTRADOR])
 @Controller('venta/meta/sucursal')
 export class VentaMestasSucursalController  {
       constructor(private readonly VentaMetasService:VentaMetasService){}

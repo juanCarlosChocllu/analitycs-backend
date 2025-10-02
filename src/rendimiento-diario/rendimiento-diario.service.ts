@@ -65,7 +65,7 @@ export class RendimientoDiarioService {
     return { status: HttpStatus.CREATED };
   }
   async findAll(buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto) {
-    console.log(buscadorRendimientoDiarioDto);
+ 
     
     const ventas =
       await this.ventaRendimientoDiarioService.ventasParaRendimientoDiario(
@@ -140,7 +140,7 @@ export class RendimientoDiarioService {
       }),
     );
 
-    console.log(rendimiento);
+  
 
     return rendimiento;
   }
@@ -214,7 +214,7 @@ export class RendimientoDiarioService {
     ]);
 
     const paginas = calcularPaginas(countDocuments, paginadorDto.limite);
-    console.log(rendimiento);
+   
     
     return {
       paginas: paginas,
