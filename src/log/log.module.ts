@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { LogService } from './log.service';
 import { LogController } from './log.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Log, LogDescarga, logDescargaSchema, logSchema } from './schemas/log.schema';
+import { Log, LogDescarga, logDescargaSchema, LogIngresoUser, LogIngresoUserSchema, logSchema } from './schemas/log.schema';
+import { HttpModule } from '@nestjs/axios';
 
 
 @Module({
   imports:[
+    HttpModule,
     MongooseModule.forFeature(
       [
         {
@@ -16,6 +18,10 @@ import { Log, LogDescarga, logDescargaSchema, logSchema } from './schemas/log.sc
         {
           name: LogDescarga.name,
           schema: logDescargaSchema,
+        },
+          {
+          name: LogIngresoUser.name,
+          schema: LogIngresoUserSchema,
         },
       ]
     ),

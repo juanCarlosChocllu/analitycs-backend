@@ -44,3 +44,27 @@ export class LogDescarga {
   fecha: Date;
 }
 export const logDescargaSchema = SchemaFactory.createForClass(LogDescarga);
+
+@Schema({ collection: 'LogIngresoUser' })
+export class LogIngresoUser {
+  @Prop()
+  usuario: Types.ObjectId;
+   @Prop()
+  ip: string;
+   @Prop()
+  city: string;
+   @Prop()
+  region: string;
+   @Prop()
+  country: string;
+   @Prop()
+  loc: string;
+   @Prop()
+  org: string;
+   @Prop()
+  timezone: string;
+   @Prop()
+  readme: string;
+}
+export const LogIngresoUserSchema =
+  SchemaFactory.createForClass(LogIngresoUser);
