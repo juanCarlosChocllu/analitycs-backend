@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { LogService } from './log.service';
 import { LogController } from './log.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -9,6 +9,7 @@ import { HttpModule } from '@nestjs/axios';
 @Module({
   imports:[
     HttpModule,
+  
     MongooseModule.forFeature(
       [
         {

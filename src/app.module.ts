@@ -33,7 +33,7 @@ import { TokenGuard } from './core-app/guards/token.guard';
 import { DiasModule } from './dias/dias.module';
 import { LogModule } from './log/log.module';
 import { RolGuard } from './core-app/guards/Rol.Guard';
-import {  ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProxy.Guard';
 import { HttpModule } from '@nestjs/axios';
 
@@ -55,7 +55,7 @@ import { HttpModule } from '@nestjs/axios';
         uri: config.databaseUrl,
       }),
     }),
-      
+
     VentaModule,
     AsesorModule,
     ColorModule,
@@ -85,7 +85,7 @@ import { HttpModule } from '@nestjs/axios';
     UsuarioModule,
     AutenticacionModule,
     DiasModule,
-    LogModule
+    LogModule,
   ],
   controllers: [],
   providers: [
