@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import { Request } from 'express';
@@ -33,9 +38,9 @@ export class RolGuard implements CanActivate {
         ROLES_KEY,
         [context.getHandler(), context.getClass()],
       );
-      return requiredRoles.some((rol)=> request.usuario.rol == rol)
+      return requiredRoles.some((rol) => request.usuario.rol == rol);
     }
-   
-    throw new UnauthorizedException()
+
+    throw new UnauthorizedException();
   }
 }
