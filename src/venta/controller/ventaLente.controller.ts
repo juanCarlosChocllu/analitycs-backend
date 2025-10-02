@@ -25,6 +25,8 @@ export class VentaLenteController {
     @Param('sucursal', new ValidacionIdPipe()) sucursal: Types.ObjectId,
     @Body() informacionVentaDto: DetalleVentaDto,
   ) {
+    console.log(sucursal);
+    console.log(informacionVentaDto);
     return this.ventaLentService.kpiInformacion(sucursal, informacionVentaDto);
   }
   
