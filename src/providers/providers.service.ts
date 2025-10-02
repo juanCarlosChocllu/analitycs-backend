@@ -595,7 +595,7 @@ export class ProvidersService {
     fechaFinDate.setDate(hoy.getDate() - 1);
 
     const fechaInicioDate = new Date(hoy);
-    fechaInicioDate.setDate(hoy.getDate() - 2);
+    fechaInicioDate.setDate(hoy.getDate() - 3);
 
     const formatearFecha = (fecha: Date): string => {
       const año = fecha.getFullYear();

@@ -72,17 +72,18 @@ import { RolGuard } from './core-app/guards/Rol.Guard';
     UsuarioModule,
     AutenticacionModule,
     DiasModule,
-    LogModule
+    LogModule,
   ],
   controllers: [],
-  providers: [ {
-      provide:APP_GUARD,
-      useClass:TokenGuard
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: TokenGuard,
     },
-   {
-      provide:APP_GUARD,
-      useClass:RolGuard
-    }
+    {
+      provide: APP_GUARD,
+      useClass: RolGuard,
+    },
   ],
 })
 export class AppModule {}
