@@ -33,7 +33,7 @@ import { TokenGuard } from './core-app/guards/token.guard';
 import { DiasModule } from './dias/dias.module';
 import { LogModule } from './log/log.module';
 import { RolGuard } from './core-app/guards/Rol.Guard';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import {  ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProxy.Guard';
 
 @Module({
@@ -42,7 +42,7 @@ import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProx
       throttlers: [
         {
           ttl: 60000,
-          limit: 5,
+          limit: 500,
         },
       ],
     }),
