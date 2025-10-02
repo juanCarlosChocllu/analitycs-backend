@@ -29,15 +29,16 @@ export class LogService {
   }
 
   public async registarLogIngresoUser(request: Request, ip: string) {
-    if (ip != '127.0.0.1') {
-      const response = await firstValueFrom(
-        this.HttpService.get<IpInfoData>(`https://ipinfo.io/181.115.171.95`),
-      );
+    if (ip == '127.0.0.1' || ip == "::1") {
+      return
+    }
+    const response = await firstValueFrom(
+        this.HttpService.get<IpInfoData>(`https://ipinfo.io/${ip}`),
+      );      
       const data: IpInfoData = {
         ...response.data,
         usuario: request.body.username,
       };
-      await this.logIngresoUser.create(data);
-    }
+      return this.logIngresoUser.create(data);
   }
 }
