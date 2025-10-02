@@ -33,9 +33,20 @@ import { TokenGuard } from './core-app/guards/token.guard';
 import { DiasModule } from './dias/dias.module';
 import { LogModule } from './log/log.module';
 import { RolGuard } from './core-app/guards/Rol.Guard';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProxy.Guard';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 5,
+        },
+      ],
+    }),
+
     MongooseModule.forRootAsync({
       imports: [CoreAppModule],
       inject: [AppConfigService],
@@ -43,6 +54,7 @@ import { RolGuard } from './core-app/guards/Rol.Guard';
         uri: config.databaseUrl,
       }),
     }),
+
     VentaModule,
     AsesorModule,
     ColorModule,
@@ -76,6 +88,10 @@ import { RolGuard } from './core-app/guards/Rol.Guard';
   ],
   controllers: [],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerBehindProxyGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: TokenGuard,
