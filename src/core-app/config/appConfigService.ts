@@ -31,5 +31,9 @@ export class AppConfigService {
     get tokenMia(): string {
     return this.configService.get<string>('TOKEN_MIA') || "";
   }
+
+   get tokenLocalizacion(): string {
+    return this.configService.get<string>('TOKEN_LOCALIZACION') || "";
+  }
   
 }
