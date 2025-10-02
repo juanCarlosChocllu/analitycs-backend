@@ -111,7 +111,7 @@ export class AsesorService {
         }
       }
     ])
-    console.log(sucursales);
+  
     
     return sucursales
   }

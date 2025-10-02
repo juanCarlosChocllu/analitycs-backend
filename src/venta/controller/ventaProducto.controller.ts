@@ -1,7 +1,10 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { VentaProductoService } from "../service/ventaProducto.service";
 import { BuscadorVentaDto } from "../dto/BuscadorVenta.dto";
+import { ROLE } from "src/core-app/decorators/appDecorators";
+import { RolesE } from "src/core-app/enum/coreEnum";
 
+@ROLE([RolesE.ADMINISTRADOR])
 @Controller('venta/producto')
 export class VentaProductoController {
   constructor(private readonly ventaProductoService: VentaProductoService) {}

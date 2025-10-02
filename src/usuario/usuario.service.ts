@@ -188,7 +188,7 @@ export class UsuarioService {
     detalleAsesor: Types.ObjectId,
     usuario: Types.ObjectId,
   ) {
-    console.log('s',detalleAsesor, usuario);
+   
 
     await this.usuario.updateOne(
       { _id: new Types.ObjectId(usuario) },
@@ -206,7 +206,7 @@ export class UsuarioService {
   }
    async perfil(idUsuario:Types.ObjectId){
     const usuario = await this.usuario.findById(idUsuario)    
-    console.log(usuario);
+  
     
     return usuario
   }

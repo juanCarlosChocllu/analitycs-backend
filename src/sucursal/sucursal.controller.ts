@@ -11,7 +11,10 @@ import { SucursalService } from './sucursal.service';
 
 import { Types } from 'mongoose';
 import { ValidacionIdPipe } from 'src/core-app/utils/validacion-id/validacion-id.pipe';
+import { ROLE } from 'src/core-app/decorators/appDecorators';
+import { RolesE } from 'src/core-app/enum/coreEnum';
 
+@ROLE([RolesE.ADMINISTRADOR])
 @Controller()
 export class SucursalController {
   constructor(private readonly sucursalService: SucursalService) {}

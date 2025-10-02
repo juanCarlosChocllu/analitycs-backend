@@ -5,7 +5,11 @@ import { BuscadorVentaDto } from '../dto/BuscadorVenta.dto';
 import { ValidacionIdPipe } from 'src/core-app/utils/validacion-id/validacion-id.pipe';
 import { Types } from 'mongoose';
 import { DetalleVentaDto } from '../dto/DetalleVenta.dto';
+import { ROLE } from 'src/core-app/decorators/appDecorators';
+import { RolesE } from 'src/core-app/enum/coreEnum';
 
+
+@ROLE([RolesE.ADMINISTRADOR])
 @Controller('venta')
 export class VentaLenteController {
   constructor(private readonly ventaLentService: VentaLentService) {}

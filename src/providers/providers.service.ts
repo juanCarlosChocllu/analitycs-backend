@@ -1,6 +1,4 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { CreateProviderDto } from './dto/create-provider.dto';
-import { UpdateProviderDto } from './dto/update-provider.dto';
 import { HttpService } from '@nestjs/axios';
 import { DescargarProviderDto } from './dto/DescargarProviderDto';
 import { firstValueFrom } from 'rxjs';
@@ -13,7 +11,7 @@ import {
   RecetaResponseI,
   VentaApiI,
 } from './interface/ApiMia';
-import { VentaI, VentaIOpcional } from 'src/venta/interface/venta';
+import { VentaIOpcional } from 'src/venta/interface/venta';
 import { SucursalService } from 'src/sucursal/sucursal.service';
 import { TipoVentaService } from 'src/tipo-venta/tipo-venta.service';
 import { AsesorService } from 'src/asesor/asesor.service';
@@ -635,7 +633,7 @@ export class ProvidersService {
 
       this.logger.debug('Iniciando la anulaciones');
       const response = await this.anularVentas(fecha);
-      console.log(fecha);
+
     } catch (error) {
       console.log(error);
     }
@@ -660,7 +658,7 @@ export class ProvidersService {
 
       this.logger.debug('Iniciando la descarga recetas');
       const response = await this.descargarReceta(fecha);
-      console.log(fecha);
+  
     } catch (error) {
       console.log(error);
     }

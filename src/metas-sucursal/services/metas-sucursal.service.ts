@@ -38,8 +38,6 @@ export class MetasSucursalService {
   }
 
   async findAll(buscadorMetasDto: BuscadorMetasDto) {
-    console.log(buscadorMetasDto);
-
     const { f1, f2 } = formaterFechaHora(
       buscadorMetasDto.fechaInicio,
       buscadorMetasDto.fechaFin,

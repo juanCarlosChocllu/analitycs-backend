@@ -11,7 +11,10 @@ import { VentaService } from '../service/venta.service';
 import { BuscadorRendimientoDiarioDto } from 'src/rendimiento-diario/dto/BuscardorRendimientoDiario';
 import { VentaRendimientoDiarioService } from '../service/ventaRendimientoDiario.service';
 import { BuscadorVentaDto } from '../dto/BuscadorVenta.dto';
+import { ROLE } from 'src/core-app/decorators/appDecorators';
+import { RolesE } from 'src/core-app/enum/coreEnum';
 
+@ROLE([RolesE.ADMINISTRADOR])
 @Controller('venta')
 export class VentaController {
   constructor(
@@ -37,23 +40,20 @@ export class VentaController {
   }
   @Post('excel/indicadores/sucursal')
   async indicadoresPorSucursal(@Body() ventaTodasDto: BuscadorVentaDto) {
-    return  this.ventaService.indicadoresPorSucursal(
-      ventaTodasDto,
-    );
+    return this.ventaService.indicadoresPorSucursal(ventaTodasDto);
   }
-   @Post('excel/indicadores/asesor')
+  @Post('excel/indicadores/asesor')
   async indicadoresPorAsesor(@Body() ventaTodasDto: BuscadorVentaDto) {
     return await this.ventaService.indicadoresPorAsesor(ventaTodasDto);
   }
 
-
-   @Post('actual')
+  @Post('actual')
   async ventaExcelActual(@Body() ventaTodasDto: BuscadorVentaDto) {
     return await this.ventaService.ventas(ventaTodasDto);
   }
 
   @Post('anterior')
-  async ventaExcelAnterior(@Body() ventaTodasDto: BuscadorVentaDto) {    
+  async ventaExcelAnterior(@Body() ventaTodasDto: BuscadorVentaDto) {
     return await this.ventaService.ventas(ventaTodasDto);
   }
 }

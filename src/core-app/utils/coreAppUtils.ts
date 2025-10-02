@@ -58,9 +58,7 @@ export function calcularPaginas(countDocuments: number, limite: number): number 
 }
 
 export function ticketPromedio(totalVenta: number, cantidadTotaVenta: number) {
-    const tkPromedio = totalVenta / cantidadTotaVenta;
-    console.log(tkPromedio);
-    
+    const tkPromedio = totalVenta / cantidadTotaVenta;    
     return tkPromedio ? parseFloat(tkPromedio.toFixed(2)) : 0;
   }
 

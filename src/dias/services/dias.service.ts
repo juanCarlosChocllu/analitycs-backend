@@ -107,7 +107,7 @@ export class DiasService {
       }
 
     ])
-    console.log(dias);
+
     
     return dias 
     
