@@ -31,21 +31,10 @@ export class LogService {
     return this.logDescarga.find().limit(1).sort({ fechaDescarga: -1 });
   }
 
-  public async registarLogIngresoUser(request: Request, ip: string, token:string) {  
+  public async registarLogIngresoUser(request: Request, ip: string) {  
     if (ip == '127.0.0.1' || ip == "::1") {
       return
     }
-    const response = await firstValueFrom(
-        this.HttpService.get<IpInfoData>(`https://ipinfo.io/${ip}`, {
-          headers:{
-            Authorization:`Bearer ${token}`
-          }
-        }),
-      );      
-      const data: IpInfoData = {
-        ...response.data,
-        usuario: request.body.username,
-      };
-      return this.logIngresoUser.create(data);
+      return this.logIngresoUser.create({ip:ip, usuario: request.body.username });
   }
 }
