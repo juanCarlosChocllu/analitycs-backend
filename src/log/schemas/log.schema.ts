@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { estadoLogEnum } from '../enum/estadoLog.enum';
+import { BaseSchema } from 'src/core-app/schema/baseSchema';
 
 @Schema({ collection: 'Log' })
 export class Log {
@@ -46,12 +47,14 @@ export class LogDescarga {
 export const logDescargaSchema = SchemaFactory.createForClass(LogDescarga);
 
 @Schema({ collection: 'LogIngresoUser' })
-export class LogIngresoUser {
+export class LogIngresoUser extends BaseSchema {
   @Prop()
   usuario: string;
-   @Prop()
+  @Prop()
   ip: string;
- 
+
+  @Prop()
+  tipo: string;
 }
 export const LogIngresoUserSchema =
   SchemaFactory.createForClass(LogIngresoUser);

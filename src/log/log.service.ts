@@ -8,6 +8,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { IpInfoData } from './interface/log';
 import { AppConfigService } from 'src/core-app/config/appConfigService';
+import { UsuarioService } from 'src/usuario/usuario.service';
 @Injectable()
 export class LogService {
   constructor(
@@ -16,7 +17,7 @@ export class LogService {
     @InjectModel(LogDescarga.name)
 
     private readonly logDescarga: Model<LogDescarga>,
-    private readonly HttpService: HttpService,
+    private readonly usuarioService: UsuarioService,
 
   ) {}
 
@@ -35,6 +36,7 @@ export class LogService {
     if (ip == '127.0.0.1' || ip == "::1") {
       return
     }
-      return this.logIngresoUser.create({ip:ip, usuario: request.body.username });
+      const user= await this.usuarioService.buscarUsuaurio(request.body.username)
+      return this.logIngresoUser.create({ip:ip, usuario: request.body.username , tipo:user ? "conocido" : "desconocido"});
   }
 }
