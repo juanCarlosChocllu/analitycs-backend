@@ -36,3 +36,5 @@ export class Usuario {
 }
 
 export const usuariosSchema = SchemaFactory.createForClass(Usuario)
+
+usuariosSchema.index({username:1})

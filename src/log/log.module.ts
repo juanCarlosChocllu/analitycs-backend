@@ -11,11 +11,12 @@ import {
   logSchema,
 } from './schemas/log.schema';
 import { HttpModule } from '@nestjs/axios';
+import { UsuarioModule } from 'src/usuario/usuario.module';
 
 @Module({
   imports: [
     HttpModule,
-
+    UsuarioModule,
     MongooseModule.forFeature([
       {
         name: Log.name,
