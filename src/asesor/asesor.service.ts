@@ -36,11 +36,11 @@ export class AsesorService {
     }
     return detalle;
   }
-  listar(){
-    return this.asesor.find()
+  listar() {
+    return this.asesor.find();
   }
 
-  async listarAsesorPorSucursal(sucursal:Types.ObjectId) {
+  async listarAsesorPorSucursal(sucursal: Types.ObjectId) {
     const asesor = await this.detalleAsesor.aggregate<{
       _id: Types.ObjectId;
       nombre: string;
@@ -81,39 +81,47 @@ export class AsesorService {
     return asesor;
   }
 
-  
-  public async  asignarUsuarioAsesor(id:Types.ObjectId, usuario:Types.ObjectId){
-    const asesor= await this.asesor.findOne({_id:id})
-    if(asesor){
-      return this.asesor.updateOne({_id:new Types.ObjectId(id)},{usuario:usuario})
+  public async asignarUsuarioAsesor(
+    id: Types.ObjectId,
+    usuario: Types.ObjectId,
+  ) {
+    const asesor = await this.asesor.findOne({ _id: id });
+    if (asesor) {
+      return this.asesor.updateOne(
+        { _id: new Types.ObjectId(id) },
+        { usuario: usuario },
+      );
     }
   }
- async  listarSucursalesAsesores(asesor:Types.ObjectId){
+  async listarSucursalesAsesores(asesor: Types.ObjectId) {
     const sucursales = await this.detalleAsesor.aggregate([
       {
-        $match:{
-          asesor:new  Types.ObjectId(asesor)
-        }
+        $match: {
+          asesor: new Types.ObjectId(asesor),
+        },
       },
       {
-        $lookup:{
-          from:'Sucursal',
-          foreignField:'_id',
-          localField:'sucursal',
-          as:'sucursal'
-        }
+        $lookup: {
+          from: 'Sucursal',
+          foreignField: '_id',
+          localField: 'sucursal',
+          as: 'sucursal',
+        },
       },
       {
-        $project:{
-          _id:0,
-          asesor:'$_id',
-           nombreSucursal:{$arrayElemAt: [ '$sucursal.nombre', 0 ]}
-        }
-      }
-    ])
-  
-    
-    return sucursales
+        $project: {
+          _id: 0,
+          asesor: '$_id',
+          nombreSucursal: { $arrayElemAt: ['$sucursal.nombre', 0] },
+        },
+      },
+    ]);
+
+    return sucursales;
   }
 
+  async asesorFindOne(asesor: Types.ObjectId) {
+    const a = await this.asesor.findOne({ _id: asesor }).select('nombre');
+    return a;
+  }
 }

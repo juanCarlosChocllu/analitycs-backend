@@ -1,13 +1,12 @@
 import { Types } from "mongoose";
 import { DetalleVentaDto } from "../dto/DetalleVenta.dto";
-import { FiltroVentaI } from "../interface/venta";
+import { filtradorDetalleVentaI, FiltroVentaI } from "../interface/venta";
 import { FlagVentaE } from "../enum/ventaEnum";
 
 export function detallleVentaFilter(
   detalleVentaDto: DetalleVentaDto,
 ): FiltroVentaI {
   const filtrador: FiltroVentaI = {
-
       estadoTracking:{$ne:'ANULADO'}
   };
 
@@ -37,4 +36,19 @@ export function detallleVentaFilter(
 
     
   return filtrador;
+}
+
+export function esSucursalOAsesor(valor: Types.ObjectId, tipo: string): filtradorDetalleVentaI {
+  const filtradorDetalleVenta: filtradorDetalleVentaI = {};
+
+  switch (tipo) {
+    case 'sucursal':
+      filtradorDetalleVenta.sucursal = new Types.ObjectId(valor);
+      break;
+    case 'asesor':
+      filtradorDetalleVenta.detalleAsesor = new Types.ObjectId(valor);
+      break;
+  }
+
+  return filtradorDetalleVenta;
 }
