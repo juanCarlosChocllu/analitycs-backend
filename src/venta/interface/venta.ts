@@ -126,3 +126,7 @@ export interface ventaAvanceLocalI
       asesores:Types.ObjectId[]
     }
   
+export interface filtradorDetalleVentaI {
+  sucursal?: Types.ObjectId | null;
+  detalleAsesor?: Types.ObjectId | null;
+}

@@ -31,6 +31,23 @@ export class VentaLenteController {
   ) {
     return this.ventaLentService.kpiInformacion(sucursal, informacionVentaDto);
   }
+
+  
+  @Post('lente/asesores/sucursal')
+  ventasLenteAsesores(@Body() kpiEmpresaDto: BuscadorVentaLenteDto) {
+    return this.ventaLentService.ventasLenteAsesores(kpiEmpresaDto);
+  }
+
+  @Post('lente/informacion/asesor/:asesor')
+  InformacionLenteAsesor(
+    @Param('asesor', new ValidacionIdPipe()) asesor: Types.ObjectId,
+    @Body() informacionVentaDto: DetalleVentaDto,
+  ) {
+    return this.ventaLentService.InformacionLenteAsesor(
+      asesor,
+      informacionVentaDto,
+    );
+  }
   
 
 }
