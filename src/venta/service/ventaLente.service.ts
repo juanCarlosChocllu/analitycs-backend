@@ -140,7 +140,6 @@ export class VentaLentService {
         },
       ]);
       
-      data.push( kpiMaterial[0]);
     }
     return data;
   }
