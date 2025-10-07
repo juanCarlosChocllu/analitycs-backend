@@ -10,6 +10,9 @@ import { SucursalService } from 'src/sucursal/sucursal.service';
 import { FlagVentaE } from '../enum/ventaEnum';
 import { CotizacionService } from 'src/cotizacion/cotizacion.service';
 import { filtradorVenta } from '../utils/filtroVenta';
+import { DetalleVentaDto } from '../dto/DetalleVenta.dto';
+import { filter } from 'rxjs';
+import { detallleVentaFilter } from '../utils/detalleVenta.util';
 
 @Injectable()
 export class VentaProductoService {
@@ -21,7 +24,7 @@ export class VentaProductoService {
     private readonly stockService: StockService,
     private readonly sucursalService: SucursalService,
     private readonly cotizacionService: CotizacionService,
-  ) {}
+  ) { }
   async reporteVentaProductosUnidad(
     buscadorVentaDto: BuscadorVentaDto,
     actual: boolean,
@@ -32,8 +35,7 @@ export class VentaProductoService {
     }
 
     // Preparar filtro inicial común
-    const filtroVenta = filtradorVenta(buscadorVentaDto)
-
+    const filtroVenta = filtradorVenta(buscadorVentaDto);
 
     const resultados = await Promise.all(
       buscadorVentaDto.sucursal.map(async (sucursalId) => {
@@ -157,6 +159,169 @@ export class VentaProductoService {
     return resultados;
   }
 
+  async kipProductos(kpiDto: BuscadorVentaDto) {
+    const filtrador = filtradorVenta(kpiDto);
 
-   
+    const dataMonturas: any = [];
+    for (let su of kpiDto.sucursal) {
+      const productos = await this.venta.aggregate([
+        {
+          $match: {
+            ...filtrador,
+            sucursal: new Types.ObjectId(su),
+          },
+        },
+
+        {
+          $lookup: {
+            from: 'Sucursal',
+            foreignField: '_id',
+            localField: 'sucursal',
+            as: 'sucursal',
+          },
+        },
+        {
+          $unwind: { path: '$sucursal', preserveNullAndEmptyArrays: false },
+        },
+
+        {
+          $lookup: {
+            from: 'DetalleVenta',
+            foreignField: 'venta',
+            localField: '_id',
+            as: 'detalleVenta',
+          },
+        },
+
+        {
+          $unwind: { path: '$detalleVenta', preserveNullAndEmptyArrays: false },
+        },
+
+        {
+          $match: {
+            'detalleVenta.rubro': { $in: kpiDto.rubro },
+          },
+        },
+
+        {
+          $lookup: {
+            from: 'Producto',
+            foreignField: '_id',
+            localField: 'detalleVenta.producto',
+            as: 'Producto',
+          },
+        },
+        {
+          $lookup: {
+            from: 'Marca',
+            foreignField: '_id',
+            localField: 'Producto.marca',
+            as: 'marca',
+          },
+        },
+        {
+          $unwind: { path: '$marca', preserveNullAndEmptyArrays: false },
+        },
+
+        {
+          $group: {
+            _id: {
+              rubro: '$detalleVenta.rubro',
+              sucursal: '$sucursal._id',
+            },
+            cantidad: { $sum: '$detalleVenta.cantidad' },
+            sucursal: { $first: '$sucursal.nombre' },
+            rubro: { $first: '$detalleVenta.rubro' },
+            idSucursal: { $first: '$sucursal._id' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            sucursal: 1,
+            cantidad: 1,
+            idSucursal: 1,
+            rubro: 1,
+          },
+        },
+      ]);
+
+      dataMonturas.push(...productos);
+    }
+    return dataMonturas;
+  }
+
+  async detalleProductoKpi(
+    detalleProducto: DetalleVentaDto,
+    sucursal: Types.ObjectId,
+    rubro: string,
+  ) {
+    const filter = detallleVentaFilter(detalleProducto);
+
+    const productos = await this.venta.aggregate([
+      {
+        $match: {
+          ...filter,
+          sucursal:new Types.ObjectId(sucursal)
+        },
+      },
+      {
+        $lookup: {
+          from: 'DetalleVenta',
+          foreignField: 'venta',
+          localField: '_id',
+          as: 'detalleVenta',
+        },
+      },
+
+      {
+        $unwind: { path: '$detalleVenta', preserveNullAndEmptyArrays: false },
+      },
+
+      {
+        $match: {
+          'detalleVenta.rubro': rubro,
+        },
+      },
+      {
+        $lookup: {
+          from: 'Producto',
+          foreignField: '_id',
+          localField: 'detalleVenta.producto',
+          as: 'Producto',
+        },
+      },
+      {
+        $lookup: {
+          from: 'Marca',
+          foreignField: '_id',
+          localField: 'Producto.marca',
+          as: 'marca',
+        },
+      },
+      {
+        $unwind: { path: '$marca', preserveNullAndEmptyArrays: false },
+      },
+      
+      {
+        $group:{
+          _id:'$marca.nombre',
+          cantidad:{$sum:'$detalleVenta.cantidad'},
+          rubro:{$first:'$detalleVenta.rubro'}
+        }
+      },
+      {
+        $project:{
+          _id:0,
+          marca:'$_id',
+        cantidad:1,
+        rubro:1
+        }
+      }
+
+    ]);
+
+    
+    return productos
+  }
 }
