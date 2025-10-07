@@ -36,6 +36,7 @@ import { RolGuard } from './core-app/guards/Rol.Guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProxy.Guard';
 import { HttpModule } from '@nestjs/axios';
+import { TraficoModule } from './trafico/trafico.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { HttpModule } from '@nestjs/axios';
     AutenticacionModule,
     DiasModule,
     LogModule,
+    TraficoModule,
   ],
   controllers: [],
   providers: [
