@@ -139,10 +139,8 @@ export class VentaLentService {
           },
         },
       ]);
-      const resultado = {
-        kpiMaterial: kpiMaterial[0],
-      };
-      data.push(resultado);
+      
+      data.push( kpiMaterial[0]);
     }
     return data;
   }
