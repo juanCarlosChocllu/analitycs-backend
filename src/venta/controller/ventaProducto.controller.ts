@@ -12,9 +12,9 @@ import { Types } from "mongoose";
 export class VentaProductoController {
   constructor(private readonly ventaProductoService: VentaProductoService) {}
 
-  
+
   @Post('reporte/actual')
-  reporteProductosActual(@Body() buscadorVentaDto:BuscadorVentaDto){
+  reporteProductosActual(@Body() buscadorVentaDto:BuscadorVentaDto){ 
     return this.ventaProductoService.reporteVentaProductosUnidad(buscadorVentaDto, true)
   }
     

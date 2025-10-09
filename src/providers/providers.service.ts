@@ -407,15 +407,18 @@ export class ProvidersService {
     await this.ventaService.guardarDetalleVenta(detalle);
   }
 
+  
+
   async descargarStockProductos(descargarProviderDto: DescargarProviderDto) {
     const ventas =
-      await this.ventaService.buscarProductoDeVenta(descargarProviderDto);
-
-    const stock = await this.descargarStockMia(
-      ventas.map((item) => item.codigoMia),
-    );
-    await this.stockService.guardarStockMia(stock, ventas);
+      await this.ventaService.buscarProductoDeVenta(descargarProviderDto);  
+      const codigosUnicos = [...new Set(ventas.map(item => item.codigoMia))];   
+      const stock = await this.descargarStockMia(codigosUnicos);
+      await this.stockService.guardarStockMia(ventas, stock);
   }
+
+
+
 
   async descargarCotizacion(descargarProviderDto: DescargarProviderDto) {
     const cotizaciones =

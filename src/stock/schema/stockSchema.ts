@@ -23,9 +23,10 @@ export class Stock {
 
   @Prop()
   codigoStock: string;
- @Prop({type:Date})
-  fechaCreacion:Date
+  
+  @Prop({ type: Date })
+  fechaCreacion: Date;
 }
 
 export const stockSchema = SchemaFactory.createForClass(Stock);
-stockSchema.index({ producto: 1, cantidad:1});
+stockSchema.index({codigoStock:1})

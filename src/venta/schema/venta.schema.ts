@@ -82,8 +82,8 @@ ventaSchema.index({id_venta:1})
 ventaSchema.index({fechaVenta:1, estadoTracking:1})
 
 
-ventaSchema.index({ sucursal: 1, fechaVenta: 1, tipoVenta: 1, comisiona: 1 });
-ventaSchema.index({ sucursal: 1, fechaFinalizacion: 1, tipoVenta: 1, comisiona: 1 });
+ventaSchema.index({ sucursal: 1, fechaVenta: 1, estadoTracking:1,tipoVenta: 1, comisiona: 1 });
+ventaSchema.index({ sucursal: 1, fechaFinalizacion: 1,estadoTracking:1, tipoVenta: 1, comisiona: 1 });
 
 //indice de busqueda de recetas convertidas a ventas
 ventaSchema.index({ codigoConversion: 1, cotizacion: 1, estadoTracking: 1 });

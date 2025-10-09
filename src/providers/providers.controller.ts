@@ -13,10 +13,12 @@ import { RolesE } from 'src/core-app/enum/coreEnum';
 @Controller('providers')
 export class ProvidersController {
   constructor(private readonly providersService: ProvidersService) {}
+ 
   @Post('mia/venta')
   descargarVentas(@Body() descargarProviderDto: DescargarProviderDto) {
     return this.providersService.guardardataVenta(descargarProviderDto);
   }
+ 
   @Post('stock/Mia')
   descargarStockProductos(@Body() descargarProviderDto: DescargarProviderDto) {
     return this.providersService.descargarStockProductos(descargarProviderDto);

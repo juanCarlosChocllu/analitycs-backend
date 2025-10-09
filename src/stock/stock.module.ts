@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Stock, stockSchema } from './schema/stockSchema';
 import { AlmacenModule } from 'src/almacen/almacen.module';
 import { SucursalModule } from 'src/sucursal/sucursal.module';
+import { StockHistorial, StockHistorialSchema } from './schema/StockHistorialSchema';
 
 @Module({
   imports: [
@@ -13,7 +14,11 @@ import { SucursalModule } from 'src/sucursal/sucursal.module';
     MongooseModule.forFeature([
       {
         name: Stock.name,
-        schema: stockSchema,
+        schema: stockSchema
+      },
+       {
+        name: StockHistorial.name,
+        schema: StockHistorialSchema
       },
     ]),
   ],

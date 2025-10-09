@@ -29,12 +29,11 @@ export class VentaProductoService {
     buscadorVentaDto: BuscadorVentaDto,
     actual: boolean,
   ) {
-    // Validaciones
+   
     if (!buscadorVentaDto.rubro || buscadorVentaDto.rubro.length === 0) {
       throw new BadRequestException('Ingrese el rubro');
     }
-
-    // Preparar filtro inicial común
+   
     const filtroVenta = filtradorVenta(buscadorVentaDto);
 
     const resultados = await Promise.all(
@@ -125,7 +124,7 @@ export class VentaProductoService {
           productosFinales = await Promise.all(
             ventasAgrupadas.map(async (item) => {
               const [stock, cot] = await Promise.all([
-                this.stockService.buscarStockVenta(item.productos),
+                this.stockService.buscarStockVenta(item.productos, buscadorVentaDto.fechaInicio, buscadorVentaDto.fechaFin),
                 this.cotizacionService.cantidadCotizaciones(
                   buscadorVentaDto.rubro,
                   item.productos,

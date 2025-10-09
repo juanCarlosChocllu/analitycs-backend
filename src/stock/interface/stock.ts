@@ -20,3 +20,9 @@ export interface StockProductoI {
   producto: Types.ObjectId;
   stock: StockMia[];
 }
+
+
+export interface StockHistorialI {
+  cantidad:number,
+  fecha:Date,
+}

@@ -7,95 +7,81 @@ import { AlmacenService } from 'src/almacen/almacen.service';
 import { StockMia } from 'src/providers/interface/stockMia';
 import { StockI } from './interface/stock';
 import { CodigoMiaProductoI } from 'src/venta/interface/venta';
+import { StockHistorial } from './schema/StockHistorialSchema';
 
 @Injectable()
 export class StockService {
   constructor(
     @InjectModel(Stock.name) private readonly stock: Model<Stock>,
+    @InjectModel(StockHistorial.name)
+    private readonly stockHistorial: Model<StockHistorial>,
     private readonly sucursalService: SucursalService,
     private readonly almacenService: AlmacenService,
   ) {}
 
-  async guardarStockMia(data: StockMia[], venta: CodigoMiaProductoI[]) {
-    for (const v of venta) {
-      const stock: StockMia[] = [];
-      for (const dataMia of data) {
-        if (v.codigoMia === dataMia.codigoMiaProducto) {
-          stock.push(dataMia);
-        }
-      }
-
-      for (const da of stock) {
-        if (da.lugar === 'SUCURSAL') {
-          const sucursal = await this.sucursalService.guardarSucursalVenta(
-            da.sucursal,
-          );
-
-          if (sucursal) {
-            await this.verificarStock(
-              da.codigoStockMia,
-              da.cantidad,
-              v.producto,
-              da.lugar,
-              sucursal._id,
-              undefined,
-            );
-          }
-        } else if (da.lugar === 'ALMACEN') {
-          const almacen = await this.almacenService.verificarAlmacen(
-            da.almacen,
-          );
-          await this.verificarStock(
-            da.codigoStockMia,
-            da.cantidad,
-            v.producto,
-            da.lugar,
-            undefined,
-            almacen._id,
-          );
-        }
-      }
-    }
-  }
-
-  private async verificarStock(
-    codigoStock: string,
-    cantidad: number,
-    producto: Types.ObjectId,
-    tipo: string,
-    sucursal?: Types.ObjectId,
-    almacen?: Types.ObjectId,
-  ) {
+  async guardarStockMia(ventas: CodigoMiaProductoI[], stocks: StockMia[]) {
     const date = new Date();
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const diaRegistro: string = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate() - 1)}`;
-    const data: StockI = {
-      cantidad: cantidad,
-      producto: producto,
-      tipo: tipo,
-      codigoStock: codigoStock,
-      fechaDescarga: diaRegistro,
-      fechaCreacion: date,
-      ...(tipo === 'ALMACEN' ? { almacen: almacen } : { sucursal: sucursal }),
-    };
+    date.setHours(0, 0, 0, 0);
+    for (const v of ventas) {
+      for (const dataMia of stocks) {
+        if (v.codigoMia === dataMia.codigoMiaProducto) {
+          if (dataMia.almacen) {
+            const almacen = await this.almacenService.verificarAlmacen(
+              dataMia.almacen,
+            );
 
-    const stock = await this.stock.findOne({
-      fechaDescarga: diaRegistro,
-      producto: producto,
-      ...(almacen ? { almacen: almacen } : { sucursal: sucursal }),
-    });
+            const stockH = await this.stockHistorial.countDocuments({
+              almacen: almacen._id,
+              fechaStock: date,
+              producto: v.producto,
+              tipo: 'ALMACEN',
+            });
 
-    if (!stock) {
-      await this.stock.create(data);
+            if (stockH <= 0) {
+              await this.stockHistorial.create({
+                almacen: almacen._id,
+                cantidad: dataMia.cantidad,
+                fechaStock: date,
+                producto: v.producto,
+                tipo: 'ALMACEN',
+              });
+            }
+          }
+
+          if (dataMia.sucursal) {
+            const sucursal = await this.sucursalService.guardarSucursalVenta(
+              dataMia.sucursal,
+            );
+            const stockH = await this.stockHistorial.countDocuments({
+              sucursal: sucursal._id,
+              fechaStock: date,
+              producto: v.producto,
+              tipo: 'SUCURSAL',
+            });
+            if (stockH <= 0) {
+              await this.stockHistorial.create({
+                sucursal: sucursal._id,
+                cantidad: dataMia.cantidad,
+                fechaStock: date,
+                producto: v.producto,
+                tipo: 'SUCURSAL',
+              });
+            }
+          }
+        }
+      }
     }
   }
 
-  async buscarStockVenta(producto: Types.ObjectId[]) {
+  async buscarStockVenta(producto: Types.ObjectId[], fechaInicio:Date, fechaFin:Date) {     
     const pipeline: PipelineStage[] = [
       {
         $match: {
           producto: { $in: producto },
-          cantidad: { $gt: 0 },
+          fechaStock:{
+            $gte:fechaInicio,
+            $lte:fechaFin
+          }
         },
       },
       {
@@ -112,10 +98,11 @@ export class StockService {
         },
       },
     ];
-    const stock = await this.stock.aggregate<{
+    const stock = await this.stockHistorial.aggregate<{
       tipo: string;
       cantidad: number;
-    }>(pipeline)
+    }>(pipeline);
+ 
     return stock;
   }
 }

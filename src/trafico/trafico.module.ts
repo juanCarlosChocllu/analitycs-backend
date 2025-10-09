@@ -7,8 +7,7 @@ import { Trafico, TraficoSchema } from './schema/trafico.Schema';
 @Module({
    imports: [  
       MongooseModule.forFeature([
-        { name: Trafico.name, schema: TraficoSchema },
-    
+        { name: Trafico.name, schema: TraficoSchema }
       ]),
     ],
   controllers: [TraficoController],
