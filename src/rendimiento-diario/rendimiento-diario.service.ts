@@ -22,6 +22,7 @@ import { PaginadorCoreDto } from 'src/core-app/dto/PaginadorCoreDto';
 import { calcularPaginas, skip } from 'src/core-app/utils/coreAppUtils';
 import { VentaService } from 'src/venta/service/venta.service';
 import { VentaRendimientoDiarioService } from 'src/venta/service/ventaRendimientoDiario.service';
+import { JornadaService } from 'src/jornada/jornada.service';
 
 @Injectable()
 export class RendimientoDiarioService {
@@ -30,6 +31,7 @@ export class RendimientoDiarioService {
     private readonly rendimientoDiario: Model<RendimientoDiario>,
     @Inject(forwardRef(() => VentaRendimientoDiarioService))
     private readonly ventaRendimientoDiarioService: VentaRendimientoDiarioService,
+    private readonly jornadaService: JornadaService,
   ) {}
   async create(
     createRendimientoDiarioDto: CreateRendimientoDiarioDto,
@@ -65,8 +67,6 @@ export class RendimientoDiarioService {
     return { status: HttpStatus.CREATED };
   }
   async findAll(buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto) {
- 
-    
     const ventas =
       await this.ventaRendimientoDiarioService.ventasParaRendimientoDiario(
         buscadorRendimientoDiarioDto,
@@ -75,61 +75,48 @@ export class RendimientoDiarioService {
       ventas.map(async (item) => {
         const resultado = await Promise.all(
           item.ventaAsesor.map(async (data) => {
-            const ventas = await Promise.all(
-              data.ventas.map(async (item) => {
-                let antireflejos: number = 0;
-                let progresivos: number = 0;
-                for (const receta of item.receta) {
-                  const data = receta.descripcion.split('/');
+            const [ventas, dias] = await Promise.all([
+              Promise.all(
+                data.ventas.map(async (item) => {
+                  const { antireflejos, progresivos } =
+                    await this.calcularProgresivoAntireflejo(item.receta);
 
-                  const tipoLente = data[1];
-                  const tratamiento = data[3];
-                  if (tipoLente === 'PROGRESIVO') {
-                    progresivos += 1;
-                  }
-                  if (
-                    tratamiento === 'ANTIREFLEJO' ||
-                    tratamiento === 'BLUE SHIELD' ||
-                    tratamiento === 'GREEN SHIELD' ||
-                    tratamiento === 'CLARITY' ||
-                    tratamiento === 'CLARITY PLUS' ||
-                    tratamiento === 'STOP AGE'
-                  ) {
-                    antireflejos += 1;
-                  }
-                }
+                  const rendimientoDia = await this.rendimientoDiario.findOne({
+                    fechaDia: item.fecha,
+                    detalleAsesor: item.asesorId,
+                    flag: Flag.nuevo,
+                  });
 
-                const rendimientoDia = await this.rendimientoDiario.findOne({
-                  fechaDia: item.fecha,
-                  detalleAsesor: item.asesorId,
-                  flag: Flag.nuevo,
-                });
+                  return {
+                    asesor: data.asesor,
+                    antireflejos,
+                    atenciones: rendimientoDia ? rendimientoDia.atenciones : 0,
+                    cantidadLente: item.lente,
+                    entregas: item.entregadas,
+                    lc: item.lc,
+                    montoTotalVentas: item.montoTotal,
+                    progresivos,
+                    fecha: item.fecha,
+                    idAsesor: item.asesorId,
+                    segundoPar: rendimientoDia ? rendimientoDia.segundoPar : 0,
+                    ticket: item.ticket,
+                  };
+                }),
+              ),
+              this.jornadaService.buscarDiasTrabajados(
+                buscadorRendimientoDiarioDto.fechaInicio,
+                buscadorRendimientoDiarioDto.fechaFin,
+                data.detalleAsesor,
+              ),
+            ]);
 
-                const resultado: rendimientoI = {
-                  asesor: data.asesor,
-                  antireflejos: antireflejos,
-                  atenciones: rendimientoDia ? rendimientoDia.atenciones : 0,
-                  cantidadLente: item.lente,
-                  entregas: item.entregadas,
-                  lc: item.lc,
-                  montoTotalVentas: item.montoTotal,
-                  progresivos: progresivos,
-                  fecha: item.fecha,
-                  idAsesor: item.asesorId,
-                  segundoPar: rendimientoDia ? rendimientoDia.segundoPar : 0,
-                  ticket: item.ticket,
-                };
-
-                return resultado;
-              }),
-            );
             return {
               asesor: data.asesor,
+              diasLaborables: dias,
               ventaAsesor: ventas,
             };
           }),
         );
-
         return {
           sucursal: item.sucursal,
           metaTicket: item.metaTicket,
@@ -140,9 +127,24 @@ export class RendimientoDiarioService {
       }),
     );
 
-  
-
     return rendimiento;
+  }
+
+  async calcularProgresivoAntireflejo(receta: any[]) {
+    let antireflejos = 0;
+    let progresivos = 0;
+    for (const re of receta) {
+      const data = re.descripcion.split('/');
+      const tipoLente = data[1];
+      const tratamiento = data[3];
+
+      if (tipoLente === 'PROGRESIVO' || tipoLente === 'OCUPACIONAL')
+        progresivos++;
+      if (tratamiento !== 'SIN TRATAMIENTO') {
+        antireflejos++;
+      }
+    }
+    return { antireflejos, progresivos };
   }
 
   async listarRendimientoDiarioAsesor(
@@ -158,7 +160,7 @@ export class RendimientoDiarioService {
           }),
         },
       },
-        {
+      {
         $lookup: {
           from: 'DetalleAsesor',
           foreignField: '_id',
@@ -214,8 +216,7 @@ export class RendimientoDiarioService {
     ]);
 
     const paginas = calcularPaginas(countDocuments, paginadorDto.limite);
-   
-    
+
     return {
       paginas: paginas,
       paginaActual: paginadorDto.pagina,

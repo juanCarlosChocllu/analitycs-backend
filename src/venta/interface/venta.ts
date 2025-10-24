@@ -89,6 +89,7 @@ export interface resultadRendimientoDiarioI {
 export interface ventaAsesorI{
   asesor:string
   ventas:VentaRendimientoDiarioI[]
+  detalleAsesor:Types.ObjectId
 }
 
 

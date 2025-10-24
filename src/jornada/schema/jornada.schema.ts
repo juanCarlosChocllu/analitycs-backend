@@ -28,3 +28,9 @@ JornadaSchema.index({
   meses: 1,
   aqo: 1,
 });
+
+JornadaSchema.index({
+  fechaInicio: 1,
+  detalleAsesor: 1,
+  flag: 1,
+});

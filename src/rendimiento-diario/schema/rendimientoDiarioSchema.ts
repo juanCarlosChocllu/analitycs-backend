@@ -35,3 +35,4 @@ export class RendimientoDiario {
 export const rendimientoDiarioSchema =
   SchemaFactory.createForClass(RendimientoDiario);
 rendimientoDiarioSchema.index({fechaDia:1, asesor:1,flag:1})
+

@@ -77,7 +77,8 @@ export class JornadaService {
     const jornada = await this.jornada.find({
       detalleAsesor: detalleAsesor,
       flag: Flag.nuevo,
-      fechaInicio: { $gte: fechaInicio, $lte: fechaFin },
+      fechaInicio: { $gte: fechaInicio},
+     
     });
     let dias: number = 0;
     for (const item of jornada) {

@@ -4,12 +4,13 @@ import { RendimientoDiarioController } from './rendimiento-diario.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RendimientoDiario, rendimientoDiarioSchema } from './schema/rendimientoDiarioSchema';
 import { VentaModule } from 'src/venta/venta.module';
+import { JornadaModule } from 'src/jornada/jornada.module';
 
 @Module({
 
   imports:[
     forwardRef(()=> VentaModule),
-   
+   JornadaModule,
     MongooseModule.forFeature([
           {
             name: RendimientoDiario.name,

@@ -169,6 +169,7 @@ export class VentaRendimientoDiarioService {
             }
             const resultado: ventaAsesorI = {
               asesor: item.nombre,
+              detalleAsesor:item._id,
               ventas: ventas,
             };
 

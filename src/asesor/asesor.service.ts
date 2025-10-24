@@ -226,12 +226,12 @@ export class AsesorService {
         },
         {
           $project: {
-            _id:  { $arrayElemAt: ['$sucursal._id', 0] },
-           
+            _id: { $arrayElemAt: ['$sucursal._id', 0] },
+
             sucursal: { $arrayElemAt: ['$sucursal.nombre', 0] },
           },
         },
-      ]);    
+      ]);
       return sucursal[0];
     }
   }
