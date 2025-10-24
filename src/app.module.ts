@@ -35,8 +35,9 @@ import { LogModule } from './log/log.module';
 import { RolGuard } from './core-app/guards/Rol.Guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProxy.Guard';
-import { HttpModule } from '@nestjs/axios';
 import { TraficoModule } from './trafico/trafico.module';
+import { CicloComercialModule } from './ciclo-comercial/ciclo-comercial.module';
+import { JornadaModule } from './jornada/jornada.module';
 
 @Module({
   imports: [
@@ -88,6 +89,8 @@ import { TraficoModule } from './trafico/trafico.module';
     DiasModule,
     LogModule,
     TraficoModule,
+    CicloComercialModule,
+    JornadaModule,
   ],
   controllers: [],
   providers: [

@@ -14,16 +14,27 @@ import { webhookMentasI } from '../interface/metasInterface';
 import { formaterFechaHora, skip } from 'src/core-app/utils/coreAppUtils';
 import { Flag } from 'src/sucursal/enums/flag.enum';
 import { FlagVentaE } from 'src/venta/enum/ventaEnum';
+import { CicloComercialService } from 'src/ciclo-comercial/ciclo-comercial.service';
 
 @Injectable()
 export class MetasSucursalService {
   constructor(
     @InjectModel(MetasSucursal.name)
     private readonly metasSucursal: Model<MetasSucursal>,
+    private readonly cicloComercialService: CicloComercialService,
   ) {}
 
   async create(createMetasSucursalDto: CreateMetasSucursalDto) {
+    let contador: number = 0;
     for (const sucursal of createMetasSucursalDto.sucursal) {
+      contador++;
+      if (contador == 1) {
+        await this.cicloComercialService.registrarCicloComercial(
+          createMetasSucursalDto.fechaInicio,
+          createMetasSucursalDto.fechaFin,
+          createMetasSucursalDto.dias,
+        );
+      }
       const meta = await this.metasSucursal.create({
         ticket: createMetasSucursalDto.ticket,
         fechaFin: createMetasSucursalDto.fechaFin,

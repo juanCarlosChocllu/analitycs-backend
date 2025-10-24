@@ -12,9 +12,11 @@ import {
   diasMetasSucursalSchema,
 } from './schema/diasMetaSucursal.schema';
 import { DiasMetaService } from './services/diaMeta.service';
+import { CicloComercialModule } from 'src/ciclo-comercial/ciclo-comercial.module';
 
 @Module({
   imports: [
+    CicloComercialModule,
     MongooseModule.forFeature(
       [
         {
