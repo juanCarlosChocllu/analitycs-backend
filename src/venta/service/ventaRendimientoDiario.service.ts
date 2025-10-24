@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Venta } from '../schema/venta.schema';
 import { DetalleVenta } from '../schema/detalleVenta';
-import { Model, Types } from 'mongoose';
+import { Model, PipelineStage, Types } from 'mongoose';
 import { Request } from 'express';
 import {
   resultadRendimientoDiarioI,
@@ -18,6 +18,7 @@ import { MetasSucursalService } from 'src/metas-sucursal/services/metas-sucursal
 import { AsesorService } from 'src/asesor/asesor.service';
 import { RendimientoDiarioService } from 'src/rendimiento-diario/rendimiento-diario.service';
 import { CotizacionService } from 'src/cotizacion/cotizacion.service';
+import { JornadaService } from 'src/jornada/jornada.service';
 
 @Injectable()
 export class VentaRendimientoDiarioService {
@@ -31,6 +32,7 @@ export class VentaRendimientoDiarioService {
     private readonly asesorService: AsesorService,
     private readonly rendimientoDiarioService: RendimientoDiarioService,
     private readonly cotizacionService: CotizacionService,
+     private readonly jornadaService: JornadaService,
   ) {}
 
   async ventasParaRendimientoDiario(
@@ -336,7 +338,7 @@ export class VentaRendimientoDiarioService {
 
         const ventaAsesor = await Promise.all(
           asesor.map(async (item) => {
-            const venta = await this.venta.aggregate([
+            const pipeline:PipelineStage[]=[
               {
                 $match: {
                   detalleAsesor: new Types.ObjectId(item._id),
@@ -391,10 +393,17 @@ export class VentaRendimientoDiarioService {
               {
                 $sort: { fechaVenta: -1 },
               },
-            ]);
+            ]
+
+     
+            const [venta,dias]= await Promise.all([
+              this.venta.aggregate(pipeline),
+              this.jornadaService.buscarDiasTrabajados(buscadorRendimientoDiarioDto.fechaInicio, buscadorRendimientoDiarioDto.fechaFin, item._id)
+            ])
+
             return {
               asesor: item.nombre,
-              dias: Math.floor(Math.random() * 26),
+              dias: dias,
               ventas: venta,
             };
           }),

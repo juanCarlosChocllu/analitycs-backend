@@ -7,6 +7,7 @@ import { Model, Types } from 'mongoose';
 import { Flag } from 'src/sucursal/enums/flag.enum';
 import { flagEnum } from 'src/core-app/enum/coreEnum';
 
+
 @Injectable()
 export class JornadaService {
   constructor(
@@ -17,6 +18,8 @@ export class JornadaService {
     const fechaInicio = new Date(createJornadaDto.fechaInicio);
     const fechaFin = new Date(createJornadaDto.fechaFin);
     let diasTrabajados: number = 0;
+    const mes = fechaFin.getMonth() + 1;
+    const aqo = fechaFin.getFullYear();
 
     for (
       let d = new Date(fechaInicio);
@@ -34,12 +37,23 @@ export class JornadaService {
     return this.jornada.create({
       ...createJornadaDto,
       diasLaborales: diasTrabajados,
+      meses: mes,
+      aqo: aqo,
     });
   }
 
   listarJornadaPorAsesor(detalleAsesor: Types.ObjectId) {
+    const date = new Date();
+    const mes = date.getMonth() + 1;
+    const aqo = date.getFullYear();
+
     return this.jornada.findOne(
-      { detalleAsesor: new Types.ObjectId(detalleAsesor), flag: Flag.nuevo },
+      {
+        detalleAsesor: new Types.ObjectId(detalleAsesor),
+        flag: Flag.nuevo,
+        meses: mes,
+        aqo: aqo,
+      },
       {},
       { sort: { fechaCreacion: -1 } },
     );
@@ -55,4 +69,19 @@ export class JornadaService {
       { flag: flagEnum.eliminado },
     );
   }
+
+
+  async buscarDiasTrabajados(fechaInicio:Date, fechaFin:Date, detalleAsesor:Types.ObjectId){
+
+    const  jornada = await this.jornada.find({detalleAsesor:detalleAsesor, flag:Flag.nuevo, fechaInicio:{$gte:fechaInicio, $lte:fechaFin} })
+    let dias :number = 0
+   for (const item of jornada) {
+      dias += item.diasLaborales
+   }
+    
+    return dias
+      
+      
+  }
+
 }

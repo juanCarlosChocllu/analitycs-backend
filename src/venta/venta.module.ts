@@ -25,6 +25,7 @@ import { VentaMedicosController } from './controller/ventaMedicos.controller';
 import { EmpresaModule } from 'src/empresa/empresa.module';
 
 import { RecetaModule } from 'src/receta/receta.module';
+import { JornadaModule } from 'src/jornada/jornada.module';
 
 
 @Module({
@@ -42,7 +43,7 @@ import { RecetaModule } from 'src/receta/receta.module';
     RecetaModule,
 
     CotizacionModule,
-
+    JornadaModule,
     MongooseModule.forFeature([
       { name: Venta.name, schema: ventaSchema },
       { name: DetalleVenta.name, schema: detalleVentaSchema },

@@ -7,7 +7,7 @@ import { ROLE } from 'src/core-app/decorators/appDecorators';
 import { RolesE } from 'src/core-app/enum/coreEnum';
 import { BuscadorAsesorDto } from './dto/BuscadorAsesor.dto';
 
-@ROLE([RolesE.ADMINISTRADOR])
+  @ROLE([RolesE.ADMINISTRADOR])
 @Controller('asesor')
 export class AsesorController {
   constructor(private readonly asesorService: AsesorService) {}
@@ -16,6 +16,7 @@ export class AsesorController {
   listar() {
     return this.asesorService.listar();
   }
+
   @Get('sucursal/:asesor')
   listarSucursalesAsesores(
     @Param('asesor', ValidacionIdPipe) asesor: Types.ObjectId,
@@ -26,7 +27,7 @@ export class AsesorController {
   @Get('listarPorSucursal')
   listarAesoresPorSucursal(@Query() buscadorAsesorDto:BuscadorAsesorDto) {
     return this.asesorService.listarAsesorPorSucursalDiasTrabajo(
-      new Types.ObjectId('679e440036cf4976b7d5a110'),
+      new Types.ObjectId('679e440036cf4976b7d5a104'),
       buscadorAsesorDto
     );
   }

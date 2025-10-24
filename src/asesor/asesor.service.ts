@@ -10,6 +10,7 @@ import { calcularPaginas, skip } from 'src/core-app/utils/coreAppUtils';
 
 @Injectable()
 export class AsesorService {
+   
   constructor(
     @InjectModel(Asesor.name)
     private readonly asesor: Model<Asesor>,
@@ -47,6 +48,7 @@ export class AsesorService {
     sucursal: Types.ObjectId,
     buscadorAsesorDto: BuscadorAsesorDto,
   ) {
+    const date = Date()
     const pipeline: PipelineStage[] = [
       {
         $match: {

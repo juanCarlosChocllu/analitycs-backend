@@ -8,11 +8,23 @@ export class Jornada extends BaseSchema {
   fechaInicio: Date;
   @Prop()
   fechaFin: Date;
-  @Prop({default:0})
+  @Prop({ default: 0 })
   diasLaborales: number;
-  @Prop({ type:Types.ObjectId, ref: 'DetalleAsesor' })
+  @Prop({ type: Types.ObjectId, ref: 'DetalleAsesor' })
   detalleAsesor: Types.ObjectId;
+
+  @Prop()
+  meses: number;
+
+  @Prop()
+  aqo: number;
 }
 
 export const JornadaSchema = SchemaFactory.createForClass(Jornada);
-JornadaSchema.index({detalleAsesor:1, fechaCreacion:1, flag:1})
+JornadaSchema.index({
+  detalleAsesor: 1,
+  fechaCreacion: 1,
+  flag: 1,
+  meses: 1,
+  aqo: 1,
+});
