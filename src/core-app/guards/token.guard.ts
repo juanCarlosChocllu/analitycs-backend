@@ -38,6 +38,7 @@ export class TokenGuard implements CanActivate {
         ); 
         if (usuario) {
           request.usuario = {
+            
             detalleAsesor: usuario.detalleAsesor ? usuario.detalleAsesor : null,
             idUsuario: usuario?.id,
             rol:usuario.rol

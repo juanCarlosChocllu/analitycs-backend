@@ -7,7 +7,6 @@ import { Model, Types } from 'mongoose';
 import { Flag } from 'src/sucursal/enums/flag.enum';
 import { flagEnum } from 'src/core-app/enum/coreEnum';
 
-
 @Injectable()
 export class JornadaService {
   constructor(
@@ -70,18 +69,21 @@ export class JornadaService {
     );
   }
 
+  async buscarDiasTrabajados(
+    fechaInicio: Date,
+    fechaFin: Date,
+    detalleAsesor: Types.ObjectId,
+  ) {
+    const jornada = await this.jornada.find({
+      detalleAsesor: detalleAsesor,
+      flag: Flag.nuevo,
+      fechaInicio: { $gte: fechaInicio, $lte: fechaFin },
+    });
+    let dias: number = 0;
+    for (const item of jornada) {
+      dias += item.diasLaborales;
+    }
 
-  async buscarDiasTrabajados(fechaInicio:Date, fechaFin:Date, detalleAsesor:Types.ObjectId){
-
-    const  jornada = await this.jornada.find({detalleAsesor:detalleAsesor, flag:Flag.nuevo, fechaInicio:{$gte:fechaInicio, $lte:fechaFin} })
-    let dias :number = 0
-   for (const item of jornada) {
-      dias += item.diasLaborales
-   }
-    
-    return dias
-      
-      
+    return dias;
   }
-
 }

@@ -16,7 +16,7 @@ export class AsesorService {
     private readonly asesor: Model<Asesor>,
     @InjectModel(DetalleAsesor.name)
     private readonly detalleAsesor: Model<DetalleAsesor>,
-    private readonly jornadaService: JornadaService,
+    private readonly jornadaService: JornadaService
   ) {}
 
   async guardarAsesor(nombre: string) {
@@ -45,14 +45,19 @@ export class AsesorService {
   }
 
   async listarAsesorPorSucursalDiasTrabajo(
-    sucursal: Types.ObjectId,
+    detaelleAsesor: Types.ObjectId | null,
     buscadorAsesorDto: BuscadorAsesorDto,
   ) {
-    const date = Date()
+
+    const filter = {}
+    if(detaelleAsesor){
+      const detalle=  await this.detalleAsesor.findOne({_id:new Types.ObjectId(detaelleAsesor)})
+      filter['sucursal'] =  detalle?.sucursal
+    }
     const pipeline: PipelineStage[] = [
       {
         $match: {
-          sucursal: new Types.ObjectId(sucursal),
+         ...filter
         },
       },
 
@@ -66,6 +71,14 @@ export class AsesorService {
       },
       {
         $unwind: { path: '$asesor', preserveNullAndEmptyArrays: false },
+      },
+       {
+        $lookup: {
+          from: 'Sucursal',
+          foreignField: '_id',
+          localField: 'sucursal',
+          as: 'sucursal',
+        },
       },
       ...(buscadorAsesorDto.nombre
         ? [
@@ -86,15 +99,14 @@ export class AsesorService {
         $project: {
           _id: 1,
           nombre: '$asesor.nombre',
+          sucursal: { $arrayElemAt: ['$sucursal.nombre', 0] },
         },
       },
     ];
 
     const [asesor, countDocuments] = await Promise.all([
       this.detalleAsesor.aggregate(pipeline),
-      this.detalleAsesor.countDocuments({
-        sucursal: new Types.ObjectId(sucursal),
-      }),
+      this.detalleAsesor.countDocuments({...filter}),
     ]);
     const data = await Promise.all(
       asesor.map(async (item) => {
