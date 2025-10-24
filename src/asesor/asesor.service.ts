@@ -10,13 +10,12 @@ import { calcularPaginas, skip } from 'src/core-app/utils/coreAppUtils';
 
 @Injectable()
 export class AsesorService {
-   
   constructor(
     @InjectModel(Asesor.name)
     private readonly asesor: Model<Asesor>,
     @InjectModel(DetalleAsesor.name)
     private readonly detalleAsesor: Model<DetalleAsesor>,
-    private readonly jornadaService: JornadaService
+    private readonly jornadaService: JornadaService,
   ) {}
 
   async guardarAsesor(nombre: string) {
@@ -48,16 +47,17 @@ export class AsesorService {
     detaelleAsesor: Types.ObjectId | null,
     buscadorAsesorDto: BuscadorAsesorDto,
   ) {
-
-    const filter = {}
-    if(detaelleAsesor){
-      const detalle=  await this.detalleAsesor.findOne({_id:new Types.ObjectId(detaelleAsesor)})
-      filter['sucursal'] =  detalle?.sucursal
+    const filter = {};
+    if (detaelleAsesor) {
+      const detalle = await this.detalleAsesor.findOne({
+        _id: new Types.ObjectId(detaelleAsesor),
+      });
+      filter['sucursal'] = detalle?.sucursal;
     }
     const pipeline: PipelineStage[] = [
       {
         $match: {
-         ...filter
+          ...filter,
         },
       },
 
@@ -72,7 +72,7 @@ export class AsesorService {
       {
         $unwind: { path: '$asesor', preserveNullAndEmptyArrays: false },
       },
-       {
+      {
         $lookup: {
           from: 'Sucursal',
           foreignField: '_id',
@@ -106,7 +106,7 @@ export class AsesorService {
 
     const [asesor, countDocuments] = await Promise.all([
       this.detalleAsesor.aggregate(pipeline),
-      this.detalleAsesor.countDocuments({...filter}),
+      this.detalleAsesor.countDocuments({ ...filter }),
     ]);
     const data = await Promise.all(
       asesor.map(async (item) => {
@@ -206,5 +206,33 @@ export class AsesorService {
   async asesorFindOne(asesor: Types.ObjectId) {
     const a = await this.asesor.findOne({ _id: asesor }).select('nombre');
     return a;
+  }
+
+  async mostrarSucursalUsuario(detalleAsesor: Types.ObjectId | null) {
+    if (detalleAsesor) {
+      const sucursal = await this.detalleAsesor.aggregate([
+        {
+          $match: {
+            _id: new Types.ObjectId(detalleAsesor),
+          },
+        },
+        {
+          $lookup: {
+            from: 'Sucursal',
+            foreignField: '_id',
+            localField: 'sucursal',
+            as: 'sucursal',
+          },
+        },
+        {
+          $project: {
+            _id:  { $arrayElemAt: ['$sucursal._id', 0] },
+           
+            sucursal: { $arrayElemAt: ['$sucursal.nombre', 0] },
+          },
+        },
+      ]);    
+      return sucursal[0];
+    }
   }
 }

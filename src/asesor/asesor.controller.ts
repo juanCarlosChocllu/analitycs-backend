@@ -10,7 +10,7 @@ import type { Request } from 'express';
 
 @Controller('asesor')
 export class AsesorController {
-  constructor(private readonly asesorService: AsesorService) {}
+  constructor(private readonly asesorService: AsesorService) { }
   @ROLE([RolesE.ADMINISTRADOR])
   @Get('listar')
   listar() {
@@ -33,5 +33,11 @@ export class AsesorController {
       request.usuario.detalleAsesor,
       buscadorAsesorDto,
     );
+  }
+
+  @ROLE([RolesE.ADMINISTRADOR, RolesE.GESTOR, RolesE.ASESOR])
+  @Get('montrarScursalUsuario')
+  mostrarSucursalUsuario(@Req() request: Request,){
+    return this.asesorService.mostrarSucursalUsuario(request.usuario.detalleAsesor)
   }
 }
