@@ -373,7 +373,7 @@ export class VentaRendimientoDiarioService {
                   montoTotal: { $sum: '$montoTotal' },
                   ticket: { $sum: 1 },
 
-                  dias: { $sum: 1 },
+                 
                 },
               },
               {
@@ -392,7 +392,7 @@ export class VentaRendimientoDiarioService {
                   montoTotal: 1,
 
                   ticket: 1,
-                  dias: 1,
+              
                 },
               },
               {
