@@ -112,7 +112,7 @@ export class RendimientoDiarioService {
 
             return {
               asesor: data.asesor,
-              diasLaborables: dias,
+              diasLaborales: dias,
               ventaAsesor: ventas,
             };
           }),

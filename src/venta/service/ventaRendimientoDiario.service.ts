@@ -92,6 +92,7 @@ export class VentaRendimientoDiarioService {
                 {
                   $group: {
                     _id: agrupacion,
+                    dias: { $sum: 1 },
                     lente: {
                       $sum: {
                         $cond: {
@@ -158,12 +159,15 @@ export class VentaRendimientoDiarioService {
                     entregadas: 1,
                     asesorId: 1,
                     ticket: 1,
+                    dias:1
                   },
                 },
                 {
                   $sort: { fechaVenta: -1 },
                 },
               ]);
+              console.log(ventas);
+              
             if (ventas.length === 0) {
               return null;
             }
@@ -401,7 +405,9 @@ export class VentaRendimientoDiarioService {
               this.venta.aggregate(pipeline),
               this.jornadaService.buscarDiasTrabajados(buscadorRendimientoDiarioDto.fechaInicio, buscadorRendimientoDiarioDto.fechaFin, item._id)
             ])
-
+            
+            console.log(venta);
+            
             return {
               asesor: item.nombre,
               dias: dias,
