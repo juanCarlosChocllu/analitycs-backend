@@ -75,7 +75,7 @@ export class RendimientoDiarioService {
       ventas.map(async (item) => {
         const resultado = await Promise.all(
           item.ventaAsesor.map(async (data) => {
-            console.log(data.detalleAsesor);
+            
             
             const [ventas, dias] = await Promise.all([
               Promise.all(
