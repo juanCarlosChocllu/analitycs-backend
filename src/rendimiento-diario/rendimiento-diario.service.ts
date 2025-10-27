@@ -75,19 +75,23 @@ export class RendimientoDiarioService {
       ventas.map(async (item) => {
         const resultado = await Promise.all(
           item.ventaAsesor.map(async (data) => {
+            console.log(data.detalleAsesor);
+            
             const [ventas, dias] = await Promise.all([
               Promise.all(
                 data.ventas.map(async (item) => {
                   const { antireflejos, progresivos } =
                     await this.calcularProgresivoAntireflejo(item.receta);
-
+               
+                  
                   const rendimientoDia = await this.rendimientoDiario.findOne({
                     fechaDia: item.fecha,
-                    detalleAsesor: item.asesorId,
+                    detalleAsesor: data.detalleAsesor,
                     flag: Flag.nuevo,
-                  });
-
-                  return {
+                    });
+                      
+                      
+                    return {
                     asesor: data.asesor,
                     antireflejos,
                     atenciones: rendimientoDia ? rendimientoDia.atenciones : 0,
@@ -118,6 +122,7 @@ export class RendimientoDiarioService {
           }),
         );
         return {
+          empresa:item.empresa,
           sucursal: item.sucursal,
           metaTicket: item.metaTicket,
           diasComerciales: item.diasComerciales,
@@ -126,7 +131,8 @@ export class RendimientoDiarioService {
         };
       }),
     );
-
+   
+    
     return rendimiento;
   }
 

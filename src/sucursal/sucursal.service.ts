@@ -29,7 +29,7 @@ export class SucursalService {
     return sucursales
    }
    public async  listarSucursalId(id:Types.ObjectId){
-    const sucursal = await this.sucursal.aggregate([
+    const sucursal = await this.sucursal.aggregate<{_id:Types.ObjectId, nombre:string, empresa:string}>([
       {
         $match:{
           _id:new Types.ObjectId(id)
@@ -45,6 +45,7 @@ export class SucursalService {
       },
       {
         $project:{
+          _id:1,
           nombre:1,
           empresa:{ $arrayElemAt: [ "$empresa.nombre", 0 ] }
         }

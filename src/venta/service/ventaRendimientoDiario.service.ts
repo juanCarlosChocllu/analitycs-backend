@@ -32,7 +32,7 @@ export class VentaRendimientoDiarioService {
     private readonly asesorService: AsesorService,
     private readonly rendimientoDiarioService: RendimientoDiarioService,
     private readonly cotizacionService: CotizacionService,
-     private readonly jornadaService: JornadaService,
+    private readonly jornadaService: JornadaService,
   ) {}
 
   async ventasParaRendimientoDiario(
@@ -57,7 +57,7 @@ export class VentaRendimientoDiarioService {
     const dataVenta: resultadRendimientoDiarioI[] = await Promise.all(
       buscadorRendimientoDiarioDto.sucursal.map(async (item) => {
         const [sucursal, metas, asesor] = await Promise.all([
-          this.sucursalService.buscarSucursalPorId(item),
+          this.sucursalService.listarSucursalId(item),
           this.metasSucursalService.listarMetasPorSucursal(
             item,
             buscadorRendimientoDiarioDto.fechaInicio,
@@ -136,7 +136,7 @@ export class VentaRendimientoDiarioService {
                     },
                     montoTotal: { $sum: '$montoTotal' },
                     ticket: { $sum: 1 },
-                    asesorId: { $first: '$asesor' },
+                   
                   },
                 },
                 {
@@ -157,39 +157,44 @@ export class VentaRendimientoDiarioService {
                     lente: 1,
                     lc: 1,
                     entregadas: 1,
-                    asesorId: 1,
                     ticket: 1,
-                    dias:1
+                    dias: 1,
                   },
                 },
                 {
                   $sort: { fechaVenta: -1 },
                 },
               ]);
-              console.log(ventas);
-              
+
             if (ventas.length === 0) {
               return null;
             }
             const resultado: ventaAsesorI = {
               asesor: item.nombre,
-              detalleAsesor:item._id,
+              detalleAsesor: item._id,
               ventas: ventas,
             };
-
+         
+         
+            
             return resultado;
           }),
         );
         const ventaAsesorFiltrado = ventaAsesor.filter(
           (asesor) => asesor !== null,
         );
+        
         const resultado: resultadRendimientoDiarioI = {
           metaTicket: metas ? metas.ticket : 0,
           diasComerciales: metas ? metas.dias : 0,
-          sucursal: sucursal ? sucursal.nombre : 'Sin sucursal',
+          sucursal: sucursal.nombre,
+          empresa: sucursal.empresa,
           metaMonto: metas ? metas.monto : 0,
           ventaAsesor: ventaAsesorFiltrado,
         };
+   
+        
+        
         return resultado;
       }),
     );
@@ -343,7 +348,7 @@ export class VentaRendimientoDiarioService {
 
         const ventaAsesor = await Promise.all(
           asesor.map(async (item) => {
-            const pipeline:PipelineStage[]=[
+            const pipeline: PipelineStage[] = [
               {
                 $match: {
                   detalleAsesor: new Types.ObjectId(item._id),
@@ -372,8 +377,6 @@ export class VentaRendimientoDiarioService {
 
                   montoTotal: { $sum: '$montoTotal' },
                   ticket: { $sum: 1 },
-
-                 
                 },
               },
               {
@@ -392,22 +395,23 @@ export class VentaRendimientoDiarioService {
                   montoTotal: 1,
 
                   ticket: 1,
-              
                 },
               },
               {
                 $sort: { fechaVenta: -1 },
               },
-            ]
+            ];
 
-     
-            const [venta,dias]= await Promise.all([
+            const [venta, dias] = await Promise.all([
               this.venta.aggregate(pipeline),
-              this.jornadaService.buscarDiasTrabajados(buscadorRendimientoDiarioDto.fechaInicio, buscadorRendimientoDiarioDto.fechaFin, item._id)
-            ])
-            
-            console.log(venta);
-            
+              this.jornadaService.buscarDiasTrabajados(
+                buscadorRendimientoDiarioDto.fechaInicio,
+                buscadorRendimientoDiarioDto.fechaFin,
+                item._id,
+              ),
+            ]);
+
+           
             return {
               asesor: item.nombre,
               dias: dias,
@@ -433,7 +437,7 @@ export class VentaRendimientoDiarioService {
   ) {
     const filter = filtradorVenta(buscadorRendimientoDiarioDto);
     let agrupacion = {};
-    
+
     if (buscadorRendimientoDiarioDto.flagVenta == FlagVentaE.realizadas) {
       agrupacion = {
         aqo: { $year: '$fechaVenta' },
@@ -448,7 +452,6 @@ export class VentaRendimientoDiarioService {
       };
     }
 
-    
     const data = await Promise.all(
       buscadorRendimientoDiarioDto.sucursal.map(async (sucursalId) => {
         const [sucursal, metas] = await Promise.all([
@@ -506,9 +509,8 @@ export class VentaRendimientoDiarioService {
             $sort: { fechaVenta: -1 },
           },
         ]);
-        
-        
-        const data = await this.ventasFormateada(venta,sucursalId);
+
+        const data = await this.ventasFormateada(venta, sucursalId);
 
         return {
           sucursal: sucursal ? sucursal.nombre : 'Sin sucursal',
@@ -519,13 +521,13 @@ export class VentaRendimientoDiarioService {
         };
       }),
     );
- 
 
     return data;
   }
-  private async ventasFormateada(venta: ventaAvanceLocalI[], sucursal:Types.ObjectId) {
-   
-    
+  private async ventasFormateada(
+    venta: ventaAvanceLocalI[],
+    sucursal: Types.ObjectId,
+  ) {
     return Promise.all(
       venta.map(async (item) => {
         let atenciones: number = 0;
@@ -544,11 +546,15 @@ export class VentaRendimientoDiarioService {
           }
         }
 
-        const cotizaciones = await this.cotizacionService.cantidadCotizacionesPresupuesto(item.fecha,sucursal )
+        const cotizaciones =
+          await this.cotizacionService.cantidadCotizacionesPresupuesto(
+            item.fecha,
+            sucursal,
+          );
         return {
           atenciones: atenciones,
           feha: item.fecha,
-          presupuestos: cotizaciones ?  cotizaciones : presupuestos,
+          presupuestos: cotizaciones ? cotizaciones : presupuestos,
           vendidos: item.ventasRelizadas,
           entregadas: item.ventasFinalizadas,
           //asesore: item.asesores,
