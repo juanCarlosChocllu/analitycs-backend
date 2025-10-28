@@ -37,7 +37,7 @@ export class VentaRendimientoDiarioService {
   ) {}
 
   async ventasParaRendimientoDiario(
-    buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto
+    buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
   ): Promise<resultadRendimientoDiarioI[]> {
     const filter = filtradorVenta(buscadorRendimientoDiarioDto);
     let agrupacion = {};
@@ -199,7 +199,6 @@ export class VentaRendimientoDiarioService {
     return dataVenta;
   }
 
-  
   async ventaMentaPorAsesor(
     buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
   ) {

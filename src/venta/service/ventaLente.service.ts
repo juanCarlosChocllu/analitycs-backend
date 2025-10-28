@@ -30,6 +30,8 @@ export class VentaLentService {
   ) {}
 
   public async kpiMaterial(kpiDto: BuscadorVentaDto) {
+ 
+    
     const data: any[] = [];
     const filtrador = filtradorVenta(kpiDto);
     for (let su of kpiDto.sucursal) {
@@ -139,8 +141,8 @@ export class VentaLentService {
           },
         },
       ]);
-      
-    }
+      data.push(...kpiMaterial)
+    }    
     return data;
   }
 

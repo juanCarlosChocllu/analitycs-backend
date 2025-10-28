@@ -209,7 +209,7 @@ export class UsuarioService {
         },
       },
 
-         {
+      {
         $lookup: {
           from: 'Asesor',
           foreignField: '_id',
@@ -218,38 +218,38 @@ export class UsuarioService {
         },
       },
 
-        {
-          $lookup: {
-            from: 'Sucursal',
-            foreignField: '_id',
-            localField: 'detalleAsesor.0.sucursal',
-            as: 'sucursal',
-          },
+      {
+        $lookup: {
+          from: 'Sucursal',
+          foreignField: '_id',
+          localField: 'detalleAsesor.0.sucursal',
+          as: 'sucursal',
         },
-         {
-          $lookup: {
-            from: 'Empresa',
-            foreignField: '_id',
-            localField: 'sucursal.0.empresa',
-            as: 'empresa',
-          },
+      },
+      {
+        $lookup: {
+          from: 'Empresa',
+          foreignField: '_id',
+          localField: 'sucursal.0.empresa',
+          as: 'empresa',
         },
-        {
-          $project:{
-            _id:1,
-            rol:1,
-            sucursal: { $arrayElemAt: ['$sucursal.nombre', 0] },
-            empresa: { $arrayElemAt: ['$empresa.nombre', 0] },
-            idEmpresa: { $arrayElemAt: ['$empresa._id', 0] },
-            idSucursal:{ $arrayElemAt: ['$sucursal._id', 0] },
-            nombre:{ $arrayElemAt: ['$asesor.nombre', 0] }
-          }
-        }
+      },
+      {
+        $project: {
+          _id: 1,
+          rol: 1,
+          sucursal: { $arrayElemAt: ['$sucursal.nombre', 0] },
+          empresa: { $arrayElemAt: ['$empresa.nombre', 0] },
+          idEmpresa: { $arrayElemAt: ['$empresa._id', 0] },
+          idSucursal: { $arrayElemAt: ['$sucursal._id', 0] },
+          nombre: { $arrayElemAt: ['$asesor.nombre', 0] },
+        },
+      },
     ]);
-    return usuario[0]
+    return usuario[0];
   }
   async perfil(idUsuario: Types.ObjectId) {
-    const usuario = await this.usuario.findById(idUsuario);    
+    const usuario = await this.usuario.findById(idUsuario);
     return usuario;
   }
   async resetarContrasenaUsuario(
