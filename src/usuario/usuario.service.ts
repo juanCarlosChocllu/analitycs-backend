@@ -246,10 +246,10 @@ export class UsuarioService {
           }
         }
     ]);
+    return usuario[0]
   }
   async perfil(idUsuario: Types.ObjectId) {
-    const usuario = await this.usuario.findById(idUsuario);
-
+    const usuario = await this.usuario.findById(idUsuario);    
     return usuario;
   }
   async resetarContrasenaUsuario(
