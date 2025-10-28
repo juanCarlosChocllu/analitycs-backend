@@ -55,8 +55,6 @@ export class RendimientoDiarioController {
     );
   }
 
- 
-
   @ROLE([RolesE.ASESOR, RolesE.GESTOR])
   @Patch('/:id')
   update(

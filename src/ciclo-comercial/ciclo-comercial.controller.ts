@@ -1,4 +1,4 @@
-import { Controller, Get} from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { CicloComercialService } from './ciclo-comercial.service';
 import { ROLE } from 'src/core-app/decorators/appDecorators';
 import { RolesE } from 'src/core-app/enum/coreEnum';
@@ -7,8 +7,7 @@ import { RolesE } from 'src/core-app/enum/coreEnum';
 export class CicloComercialController {
   constructor(private readonly cicloComercialService: CicloComercialService) {}
   @Get()
-  listar(){
-    return this.cicloComercialService.listar()
+  listar() {
+    return this.cicloComercialService.listar();
   }
-
 }
