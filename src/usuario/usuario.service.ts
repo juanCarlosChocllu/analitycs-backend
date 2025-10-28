@@ -12,7 +12,6 @@ import { Usuario } from './schema/usuario.schema';
 import { Model, Types } from 'mongoose';
 import * as argon2 from 'argon2';
 
-import { AsesorService } from 'src/asesor/asesor.service';
 import { Request } from 'express';
 import { Flag } from 'src/sucursal/enums/flag.enum';
 import { RolE } from './enum/rol';
@@ -27,11 +26,10 @@ export class UsuarioService {
     hashLength: 50,
   };
   constructor(
-    @InjectModel(Usuario.name) private readonly usuario: Model<Usuario>
+    @InjectModel(Usuario.name) private readonly usuario: Model<Usuario>,
   ) {}
 
   async create(createUsuarioDto: CreateUsuarioDto) {
-   
     const username = await this.usuario.findOne({
       username: createUsuarioDto.username,
       flag: Flag.nuevo,
@@ -43,8 +41,8 @@ export class UsuarioService {
       createUsuarioDto.password,
       this.opcionesArgon2,
     );
-    if(createUsuarioDto.rol != RolE.ADMINISTRADOR){
-       createUsuarioDto.asesor = new Types.ObjectId(createUsuarioDto.asesor);
+    if (createUsuarioDto.rol != RolE.ADMINISTRADOR) {
+      createUsuarioDto.asesor = new Types.ObjectId(createUsuarioDto.asesor);
     }
     await this.usuario.create(createUsuarioDto);
     return { status: HttpStatus.CREATED };
@@ -68,7 +66,7 @@ export class UsuarioService {
       {
         $match: {
           flag: Flag.nuevo,
-             rol: { $eq: 'ADMINISTRADOR' },
+          rol: { $eq: 'ADMINISTRADOR' },
         },
       },
 
@@ -188,8 +186,6 @@ export class UsuarioService {
     detalleAsesor: Types.ObjectId,
     usuario: Types.ObjectId,
   ) {
-   
-
     await this.usuario.updateOne(
       { _id: new Types.ObjectId(usuario) },
       { detalleAsesor: new Types.ObjectId(detalleAsesor) },
@@ -198,26 +194,82 @@ export class UsuarioService {
   }
 
   async verificarRol(request: Request) {
-   const usuario = await this.usuario
-      .findOne({ _id: new Types.ObjectId(request.usuario.idUsuario) })
-      .select('rol');
+    const usuario = await this.usuario.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(request.usuario.idUsuario),
+        },
+      },
+      {
+        $lookup: {
+          from: 'DetalleAsesor',
+          foreignField: '_id',
+          localField: 'detalleAsesor',
+          as: 'detalleAsesor',
+        },
+      },
+
+         {
+        $lookup: {
+          from: 'Asesor',
+          foreignField: '_id',
+          localField: 'detalleAsesor.0.asesor',
+          as: 'asesor',
+        },
+      },
+
+        {
+          $lookup: {
+            from: 'Sucursal',
+            foreignField: '_id',
+            localField: 'detalleAsesor.0.sucursal',
+            as: 'sucursal',
+          },
+        },
+         {
+          $lookup: {
+            from: 'Empresa',
+            foreignField: '_id',
+            localField: 'sucursal.0.empresa',
+            as: 'empresa',
+          },
+        },
+        {
+          $project:{
+            _id:1,
+            rol:1,
+            sucursal: { $arrayElemAt: ['$sucursal.nombre', 0] },
+            empresa: { $arrayElemAt: ['$empresa.nombre', 0] },
+            idEmpresa: { $arrayElemAt: ['$empresa._id', 0] },
+            idSucursal:{ $arrayElemAt: ['$sucursal._id', 0] },
+            nombre:{ $arrayElemAt: ['$asesor.nombre', 0] }
+          }
+        }
+    ]);
+  }
+  async perfil(idUsuario: Types.ObjectId) {
+    const usuario = await this.usuario.findById(idUsuario);
 
     return usuario;
   }
-   async perfil(idUsuario:Types.ObjectId){
-    const usuario = await this.usuario.findById(idUsuario)    
-  
-    
-    return usuario
-  }
-   async resetarContrasenaUsuario(resetearContrasena: ResetearContrasena, id:Types.ObjectId){
-    const usuario = await this.usuario.findById(id)
-    if(!usuario){
-      throw new NotFoundException()
+  async resetarContrasenaUsuario(
+    resetearContrasena: ResetearContrasena,
+    id: Types.ObjectId,
+  ) {
+    const usuario = await this.usuario.findById(id);
+    if (!usuario) {
+      throw new NotFoundException();
     }
-    resetearContrasena.password = await argon2.hash(resetearContrasena.password, this.opcionesArgon2)
-     await this.usuario.findByIdAndUpdate(id,{$set:{password:resetearContrasena.password}})
-     return {status:HttpStatus.OK,   message: 'La contraseña se ha cambiado con éxito.' }
-
+    resetearContrasena.password = await argon2.hash(
+      resetearContrasena.password,
+      this.opcionesArgon2,
+    );
+    await this.usuario.findByIdAndUpdate(id, {
+      $set: { password: resetearContrasena.password },
+    });
+    return {
+      status: HttpStatus.OK,
+      message: 'La contraseña se ha cambiado con éxito.',
+    };
   }
 }

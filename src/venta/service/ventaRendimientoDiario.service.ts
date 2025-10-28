@@ -19,6 +19,7 @@ import { AsesorService } from 'src/asesor/asesor.service';
 import { RendimientoDiarioService } from 'src/rendimiento-diario/rendimiento-diario.service';
 import { CotizacionService } from 'src/cotizacion/cotizacion.service';
 import { JornadaService } from 'src/jornada/jornada.service';
+import { asesorYsucursalI } from 'src/asesor/interface/asesor';
 
 @Injectable()
 export class VentaRendimientoDiarioService {
@@ -36,7 +37,7 @@ export class VentaRendimientoDiarioService {
   ) {}
 
   async ventasParaRendimientoDiario(
-    buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
+    buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto
   ): Promise<resultadRendimientoDiarioI[]> {
     const filter = filtradorVenta(buscadorRendimientoDiarioDto);
     let agrupacion = {};
@@ -136,7 +137,6 @@ export class VentaRendimientoDiarioService {
                     },
                     montoTotal: { $sum: '$montoTotal' },
                     ticket: { $sum: 1 },
-                   
                   },
                 },
                 {
@@ -174,16 +174,15 @@ export class VentaRendimientoDiarioService {
               detalleAsesor: item._id,
               ventas: ventas,
             };
-         
-         
-            
+
             return resultado;
           }),
         );
+
         const ventaAsesorFiltrado = ventaAsesor.filter(
           (asesor) => asesor !== null,
         );
-        
+
         const resultado: resultadRendimientoDiarioI = {
           metaTicket: metas ? metas.ticket : 0,
           diasComerciales: metas ? metas.dias : 0,
@@ -192,9 +191,7 @@ export class VentaRendimientoDiarioService {
           metaMonto: metas ? metas.monto : 0,
           ventaAsesor: ventaAsesorFiltrado,
         };
-   
-        
-        
+
         return resultado;
       }),
     );
@@ -202,120 +199,7 @@ export class VentaRendimientoDiarioService {
     return dataVenta;
   }
 
-  /*async ventasParaRendimientoDiarioAsesor(
-    request: Request,
-  ): Promise<VentaRendimientoDiarioI[]> {
-    const ventas = await this.venta.aggregate([
-      {
-        $match: {
-          asesor: new Types.ObjectId(request.usuario.detalleAsesor),
-        },
-      },
-      {
-        $lookup: {
-          from: 'DetalleVenta',
-          foreignField: 'venta',
-          localField: '_id',
-          as: 'detalleVenta',
-        },
-      },
-      {
-        $unwind: {
-          path: '$detalleVenta',
-          preserveNullAndEmptyArrays: false,
-        },
-      },
-
-      {
-        $lookup: {
-          from: 'Asesor',
-          foreignField: '_id',
-          localField: 'asesor',
-          as: 'asesor',
-        },
-      },
-      {
-        $group: {
-          _id: {
-            aqo: { $year: '$fechaVenta' },
-            mes: { $month: '$fechaVenta' },
-            dia: { $dayOfMonth: '$fechaVenta' },
-          },
-          lente: {
-            $sum: {
-              $cond: {
-                if: { $eq: ['$detalleVenta.rubro', 'LENTE'] },
-                then: '$detalleVenta.cantidad',
-                else: 0,
-              },
-            },
-          },
-          lc: {
-            $sum: {
-              $cond: {
-                if: { $eq: ['$detalleVenta.rubro', 'LENTE DE CONTACTO'] },
-                then: '$detalleVenta.cantidad',
-                else: 0,
-              },
-            },
-          },
-          entregadas: {
-            $sum: {
-              $cond: {
-                if: { $eq: ['$flag', 'FINALIZADO'] },
-                then: 1,
-                else: 0,
-              },
-            },
-          },
-
-          receta: {
-            $push: {
-              $cond: {
-                if: { $eq: ['$detalleVenta.rubro', 'LENTE'] },
-                then: {
-                  descripcion: '$detalleVenta.descripcion',
-                },
-                else: '$$REMOVE',
-              },
-            },
-          },
-          montoTotal: { $sum: '$montoTotal' },
-          ticket: { $sum: 1 },
-          asesorId: { $first: { $arrayElemAt: ['$asesor._id', 0] } },
-          asesor: { $first: { $arrayElemAt: ['$asesor.nombre', 0] } },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          fecha: {
-            $concat: [
-              { $toString: '$_id.aqo' },
-              '-',
-              { $toString: '$_id.mes' },
-              '-',
-              { $toString: '$_id.dia' },
-            ],
-          },
-          asesor: 1,
-          receta: 1,
-          montoTotal: 1,
-          lente: 1,
-          lc: 1,
-          entregadas: 1,
-          asesorId: 1,
-          ticket: 1,
-        },
-      },
-      {
-        $sort: { fechaVenta: -1 },
-      },
-    ]);
-
-    return ventas;
-  }*/
-
+  
   async ventaMentaPorAsesor(
     buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
   ) {
@@ -345,7 +229,6 @@ export class VentaRendimientoDiarioService {
           ),
           this.asesorService.listarAsesorPorSucursal(item),
         ]);
-
         const ventaAsesor = await Promise.all(
           asesor.map(async (item) => {
             const pipeline: PipelineStage[] = [
@@ -411,7 +294,6 @@ export class VentaRendimientoDiarioService {
               ),
             ]);
 
-           
             return {
               asesor: item.nombre,
               dias: dias,

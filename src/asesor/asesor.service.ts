@@ -7,6 +7,7 @@ import { DetalleAsesor } from './schema/detalleAsesor';
 import { JornadaService } from 'src/jornada/jornada.service';
 import { BuscadorAsesorDto } from './dto/BuscadorAsesor.dto';
 import { calcularPaginas, skip } from 'src/core-app/utils/coreAppUtils';
+import { asesorYsucursalI } from './interface/asesor';
 
 @Injectable()
 export class AsesorService {
@@ -124,12 +125,7 @@ export class AsesorService {
   }
 
   async listarAsesorPorSucursal(sucursal: Types.ObjectId) {
-    const asesor = await this.detalleAsesor.aggregate<{
-      _id: Types.ObjectId;
-      nombre: string;
-      sucursalNombre: string;
-      idSucursal: Types.ObjectId;
-    }>([
+    const asesor = await this.detalleAsesor.aggregate<asesorYsucursalI>([
       {
         $match: {
           sucursal: new Types.ObjectId(sucursal),
@@ -161,6 +157,9 @@ export class AsesorService {
         },
       },
     ]);
+  
+  
+    
     return asesor;
   }
 
@@ -224,11 +223,20 @@ export class AsesorService {
             as: 'sucursal',
           },
         },
+
+         {
+          $lookup: {
+            from: 'Empresa',
+            foreignField: '_id',
+            localField: 'sucursal.0.empresa',
+            as: 'empresa',
+          },
+        },
         {
           $project: {
             _id: { $arrayElemAt: ['$sucursal._id', 0] },
-
             sucursal: { $arrayElemAt: ['$sucursal.nombre', 0] },
+            empresa: { $arrayElemAt: ['$empresa.nombre', 0] },
           },
         },
       ]);

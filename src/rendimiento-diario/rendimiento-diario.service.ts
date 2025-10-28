@@ -66,32 +66,34 @@ export class RendimientoDiarioService {
     });
     return { status: HttpStatus.CREATED };
   }
-  async findAll(buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto) {
+  async findAll(
+    buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
+
+  ) {
     const ventas =
       await this.ventaRendimientoDiarioService.ventasParaRendimientoDiario(
         buscadorRendimientoDiarioDto,
+       
       );
+
+
     const rendimiento = await Promise.all(
       ventas.map(async (item) => {
         const resultado = await Promise.all(
           item.ventaAsesor.map(async (data) => {
-            
-            
             const [ventas, dias] = await Promise.all([
               Promise.all(
                 data.ventas.map(async (item) => {
                   const { antireflejos, progresivos } =
                     await this.calcularProgresivoAntireflejo(item.receta);
-               
-                  
+
                   const rendimientoDia = await this.rendimientoDiario.findOne({
                     fechaDia: item.fecha,
                     detalleAsesor: data.detalleAsesor,
                     flag: Flag.nuevo,
-                    });
-                      
-                      
-                    return {
+                  });
+
+                  return {
                     asesor: data.asesor,
                     antireflejos,
                     atenciones: rendimientoDia ? rendimientoDia.atenciones : 0,
@@ -122,7 +124,7 @@ export class RendimientoDiarioService {
           }),
         );
         return {
-          empresa:item.empresa,
+          empresa: item.empresa,
           sucursal: item.sucursal,
           metaTicket: item.metaTicket,
           diasComerciales: item.diasComerciales,
@@ -131,8 +133,7 @@ export class RendimientoDiarioService {
         };
       }),
     );
-   
-    
+
     return rendimiento;
   }
 

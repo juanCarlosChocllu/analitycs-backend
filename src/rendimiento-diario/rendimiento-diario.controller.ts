@@ -37,7 +37,7 @@ export class RendimientoDiarioController {
     );
   }
 
-  @ROLE([RolesE.ADMINISTRADOR])
+  @ROLE([RolesE.ADMINISTRADOR, RolesE.ASESOR, RolesE.GESTOR])
   @Post('listar')
   findAll(@Body() buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto) {
     return this.rendimientoDiarioService.findAll(buscadorRendimientoDiarioDto);
@@ -55,10 +55,7 @@ export class RendimientoDiarioController {
     );
   }
 
-  /* @Post('asesor')
-  rendimientoDiario(@Req() request:Request  ) {
-    return this.rendimientoDiarioService.rendimientoDiarioAsesor(request);
-  }*/
+ 
 
   @ROLE([RolesE.ASESOR, RolesE.GESTOR])
   @Patch('/:id')
