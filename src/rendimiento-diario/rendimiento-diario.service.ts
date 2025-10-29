@@ -92,7 +92,8 @@ export class RendimientoDiarioService {
                     detalleAsesor: data.detalleAsesor,
                     flag: Flag.nuevo,
                   });
-
+                
+                  
                   return {
                     asesor: data.asesor,
                     antireflejos,

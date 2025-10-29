@@ -46,11 +46,11 @@ export class JornadaService {
     const mes = date.getMonth() + 1;
     const aqo = date.getFullYear();
 
-    return this.jornada.findOne(
+    return this.jornada.find(
       {
         detalleAsesor: new Types.ObjectId(detalleAsesor),
         flag: Flag.nuevo,
-        meses: mes,
+        meses: {$in: [mes , mes -1 ]},
         aqo: aqo,
       },
       {},

@@ -402,7 +402,8 @@ export class VentaRendimientoDiarioService {
         };
       }),
     );
-  
+    
+
     return data;
   }
   private async ventasFormateada(

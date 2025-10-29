@@ -53,7 +53,9 @@ export class AsesorService {
       const detalle = await this.detalleAsesor.findOne({
         _id: new Types.ObjectId(detaelleAsesor),
       });
-      filter['sucursal'] = detalle?.sucursal;
+      if(detalle){
+        filter['sucursal'] = detalle.sucursal;
+      }
     }
     const pipeline: PipelineStage[] = [
       {
@@ -120,6 +122,7 @@ export class AsesorService {
         };
       }),
     );
+
     const pagina = calcularPaginas(countDocuments, buscadorAsesorDto.limite);
     return { data, pagina };
   }
