@@ -16,6 +16,7 @@ import { Request } from 'express';
 import { Flag } from 'src/sucursal/enums/flag.enum';
 import { RolE } from './enum/rol';
 import { ResetearContrasena } from './dto/resetar-contrasena.dto';
+import { AsesorService } from 'src/asesor/asesor.service';
 @Injectable()
 export class UsuarioService {
   private readonly opcionesArgon2: argon2.Options = {
@@ -27,6 +28,7 @@ export class UsuarioService {
   };
   constructor(
     @InjectModel(Usuario.name) private readonly usuario: Model<Usuario>,
+    private readonly asesorService: AsesorService,
   ) {}
 
   async create(createUsuarioDto: CreateUsuarioDto) {
@@ -42,6 +44,10 @@ export class UsuarioService {
       this.opcionesArgon2,
     );
     if (createUsuarioDto.rol != RolE.ADMINISTRADOR) {
+      await this.asesorService.marcarConAsesorAsesor(
+        createUsuarioDto.asesor,
+        true,
+      );
       createUsuarioDto.asesor = new Types.ObjectId(createUsuarioDto.asesor);
     }
     await this.usuario.create(createUsuarioDto);
@@ -175,10 +181,14 @@ export class UsuarioService {
     if (!usuario) {
       throw new NotFoundException();
     }
+    if (usuario.rol != RolE.ADMINISTRADOR) {
+      await this.asesorService.marcarConAsesorAsesor(usuario.asesor, false);
+    }
     await this.usuario.updateOne(
       { _id: new Types.ObjectId(id) },
       { flag: Flag.eliminado },
     );
+
     return { status: HttpStatus.OK };
   }
 

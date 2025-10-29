@@ -13,7 +13,7 @@ export class AsesorController {
   constructor(private readonly asesorService: AsesorService) { }
   @ROLE([RolesE.ADMINISTRADOR])
   @Get('listar')
-  listar() {
+  listar() {    
     return this.asesorService.listar();
   }
   @ROLE([RolesE.ADMINISTRADOR])
@@ -36,7 +36,7 @@ export class AsesorController {
   }
 
   @ROLE([RolesE.ADMINISTRADOR, RolesE.GESTOR, RolesE.ASESOR])
-  @Get('montrarScursalUsuario')
+  @Get('montrarSucursalUsuario')
   mostrarSucursalUsuario(@Req() request: Request,){
     return this.asesorService.mostrarSucursalUsuario(request.usuario.detalleAsesor)
   }

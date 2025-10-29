@@ -40,8 +40,8 @@ export class AsesorService {
     }
     return detalle;
   }
-  listar() {
-    return this.asesor.find();
+  listar() {    
+    return this.asesor.find({tieneUsuario:{$ne:true}});
   }
 
   async listarAsesorPorSucursalDiasTrabajo(
@@ -53,7 +53,7 @@ export class AsesorService {
       const detalle = await this.detalleAsesor.findOne({
         _id: new Types.ObjectId(detaelleAsesor),
       });
-      if(detalle){
+      if (detalle) {
         filter['sucursal'] = detalle.sucursal;
       }
     }
@@ -160,9 +160,7 @@ export class AsesorService {
         },
       },
     ]);
-  
-  
-    
+
     return asesor;
   }
 
@@ -227,7 +225,7 @@ export class AsesorService {
           },
         },
 
-         {
+        {
           $lookup: {
             from: 'Empresa',
             foreignField: '_id',
@@ -244,6 +242,16 @@ export class AsesorService {
         },
       ]);
       return sucursal[0];
+    }
+  }
+
+  async marcarConAsesorAsesor(asesor: Types.ObjectId, tieneUsuario:boolean) {
+    const ase = await this.asesor.findOne({ _id: new Types.ObjectId(asesor) });
+    if (ase) {
+      return this.asesor.updateOne(
+        { _id: new Types.ObjectId(asesor) },
+        { tieneUsuario: tieneUsuario },
+      );
     }
   }
 }

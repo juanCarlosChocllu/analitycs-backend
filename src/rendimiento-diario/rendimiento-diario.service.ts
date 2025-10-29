@@ -19,10 +19,15 @@ import { rendimientoI } from './interface/rendimiento';
 import { BuscadorRendimientoDiarioDto } from './dto/BuscardorRendimientoDiario';
 import { Flag } from 'src/sucursal/enums/flag.enum';
 import { PaginadorCoreDto } from 'src/core-app/dto/PaginadorCoreDto';
-import { calcularPaginas, skip } from 'src/core-app/utils/coreAppUtils';
+import {
+  calcularPaginas,
+  formaterFechaHora,
+  skip,
+} from 'src/core-app/utils/coreAppUtils';
 import { VentaService } from 'src/venta/service/venta.service';
 import { VentaRendimientoDiarioService } from 'src/venta/service/ventaRendimientoDiario.service';
 import { JornadaService } from 'src/jornada/jornada.service';
+import { formatearFechaVentaStr } from './utils/rendimientoDiario';
 
 @Injectable()
 export class RendimientoDiarioService {
@@ -47,7 +52,11 @@ export class RendimientoDiarioService {
       request.usuario.detalleAsesor,
     );
     const date = new Date();
-    const diaRegistro: string = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    const anio = date.getFullYear();
+    const mes = String(date.getMonth() + 1).padStart(2, '0');
+    const dia = String(date.getDate()).padStart(2, '0');
+    const diaRegistro = `${anio}-${mes}-${dia}`;
+
     const verificar = await this.rendimientoDiario.countDocuments({
       detalleAsesor: new Types.ObjectId(asesor),
       fechaDia: diaRegistro,
@@ -66,16 +75,11 @@ export class RendimientoDiarioService {
     });
     return { status: HttpStatus.CREATED };
   }
-  async findAll(
-    buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto,
-
-  ) {
+  async findAll(buscadorRendimientoDiarioDto: BuscadorRendimientoDiarioDto) {
     const ventas =
       await this.ventaRendimientoDiarioService.ventasParaRendimientoDiario(
         buscadorRendimientoDiarioDto,
-       
       );
-
 
     const rendimiento = await Promise.all(
       ventas.map(async (item) => {
@@ -86,14 +90,13 @@ export class RendimientoDiarioService {
                 data.ventas.map(async (item) => {
                   const { antireflejos, progresivos } =
                     await this.calcularProgresivoAntireflejo(item.receta);
-
+                  const dia = formatearFechaVentaStr(item.fecha);
                   const rendimientoDia = await this.rendimientoDiario.findOne({
-                    fechaDia: item.fecha,
+                    fechaDia: dia,
                     detalleAsesor: data.detalleAsesor,
                     flag: Flag.nuevo,
                   });
-                
-                  
+
                   return {
                     asesor: data.asesor,
                     antireflejos,
@@ -232,65 +235,6 @@ export class RendimientoDiarioService {
     };
   }
 
-  /* async rendimientoDiarioAsesor(request: Request) {
-    if (!request.usuario.detalleAsesor) {
-      throw new NotFoundException(
-        'Su usuario deve estar vinculado a un asesor',
-      );
-    }
-
-    const ventas =
-      await this.ventaRendimientoDiarioService.ventasParaRendimientoDiarioAsesor(request);
-    const data = await Promise.all(
-      ventas.map(async (item) => {
-        let antireflejos: number = 0;
-        let progresivos: number = 0;
-        for (const receta of item.receta) {
-          const data = receta.descripcion.split('/');
-
-          const tipoLente = data[1];
-          const tratamiento = data[3];
-          if (tipoLente === 'PROGRESIVO') {
-            progresivos += 1;
-          }
-          if (
-            tratamiento === 'ANTIREFLEJO' ||
-            tratamiento === 'BLUE SHIELD' ||
-            tratamiento === 'GREEN SHIELD' ||
-            tratamiento === 'CLARITY' ||
-            tratamiento === 'CLARITY PLUS' ||
-            tratamiento === 'STOP AGE'
-          ) {
-            antireflejos += 1;
-          }
-        }
-
-        const rendimientoDia = await this.rendimientoDiario.findOne({
-          fechaDia: item.fecha,
-          asesor: item.asesorId,
-          flag: Flag.nuevo,
-        });
-
-        const resultado: rendimientoI = {
-          asesor: item.asesor,
-          antireflejos: antireflejos,
-          atenciones: rendimientoDia ? rendimientoDia.atenciones : 0,
-          cantidadLente: item.lente,
-          entregas: item.entregadas,
-          lc: item.lc,
-          montoTotalVentas: item.montoTotal,
-          progresivos: progresivos,
-          fecha: item.fecha,
-          idAsesor: item.asesorId,
-          segundoPar: rendimientoDia ? rendimientoDia.segundoPar : 0,
-          ticket: item.ticket,
-        };
-        return resultado;
-      }),
-    );
-
-    return data;
-  }*/
   async update(
     updateRendimientoDiarioDto: UpdateRendimientoDiarioDto,
     id: Types.ObjectId,
@@ -299,7 +243,10 @@ export class RendimientoDiarioService {
     const rendimiento = await this.rendimientoDiario.findOne({
       _id: new Types.ObjectId(id),
     });
-    const diaRegistro: string = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    const anio = date.getFullYear();
+    const mes = String(date.getMonth() + 1).padStart(2, '0');
+    const dia = String(date.getDate()).padStart(2, '0');
+    const diaRegistro = `${anio}-${mes}-${dia}`;
     if (rendimiento) {
       if (rendimiento.fechaDia == diaRegistro) {
         return await this.rendimientoDiario.updateOne(
@@ -307,7 +254,7 @@ export class RendimientoDiarioService {
           updateRendimientoDiarioDto,
         );
       }
-      throw new BadRequestException('Tua tiempo de edicion expiro');
+      throw new BadRequestException('Tu tiempo de edicion expiro');
     }
     throw new NotFoundException();
   }
@@ -316,10 +263,11 @@ export class RendimientoDiarioService {
     asesor: Types.ObjectId[],
     dia: string,
   ) {
+    const diaFormateada = formatearFechaVentaStr(dia);
     const rendimiento = await this.rendimientoDiario.find({
       flag: Flag.nuevo,
-      fechaDia: dia,
-      detalleAsesor: { $in: asesor.map((item) => new Types.ObjectId(item)) },
+      fechaDia: diaFormateada,
+      detalleAsesor: { $in: asesor },
     });
     return rendimiento;
   }

@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Venta } from '../schema/venta.schema';
 import { DetalleVenta } from '../schema/detalleVenta';
 import { Model, PipelineStage, Types } from 'mongoose';
-import { Request } from 'express';
 import {
   resultadRendimientoDiarioI,
   ventaAsesorI,
@@ -19,7 +18,6 @@ import { AsesorService } from 'src/asesor/asesor.service';
 import { RendimientoDiarioService } from 'src/rendimiento-diario/rendimiento-diario.service';
 import { CotizacionService } from 'src/cotizacion/cotizacion.service';
 import { JornadaService } from 'src/jornada/jornada.service';
-import { asesorYsucursalI } from 'src/asesor/interface/asesor';
 
 @Injectable()
 export class VentaRendimientoDiarioService {
@@ -402,7 +400,6 @@ export class VentaRendimientoDiarioService {
         };
       }),
     );
-    
 
     return data;
   }
@@ -419,6 +416,7 @@ export class VentaRendimientoDiarioService {
             item.asesores,
             item.fecha,
           );
+
         for (const re of rendimiento) {
           if (re.atenciones) {
             atenciones += re.atenciones;

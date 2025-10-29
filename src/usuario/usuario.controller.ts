@@ -48,6 +48,7 @@ export class UsuarioController {
   findOne(@Param('id', ValidacionIdPipe) id: Types.ObjectId) {
     return this.usuarioService.findOne(id);
   }
+  
   @ROLE([RolesE.ADMINISTRADOR])
   @Patch(':id')
   actualizar(
