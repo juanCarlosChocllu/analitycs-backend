@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CicloComercial } from './schema/ciclo-comercial.schema';
 import { Model } from 'mongoose';
+import { formaterFechaHora } from 'src/core-app/utils/coreAppUtils';
 
 @Injectable()
 export class CicloComercialService {
@@ -15,9 +16,9 @@ export class CicloComercialService {
     fechaFin: string,
     dias: number,
   ) {
+    const {f1,f2} = formaterFechaHora(fechaInicio, fechaFin)    
     const ciclo = await this.cicloComercial.findOne({
-      fechaInicio: fechaInicio,
-      fechaFin: fechaFin,
+      fechaInicio: f1,
     });
     if (!ciclo) {
       const countDocuments = (await this.cicloComercial.countDocuments()) + 1;
