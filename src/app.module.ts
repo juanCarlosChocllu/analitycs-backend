@@ -38,6 +38,8 @@ import { ThrottlerBehindProxyGuard } from './core-app/guards/ThrottlerBehindProx
 import { TraficoModule } from './trafico/trafico.module';
 import { CicloComercialModule } from './ciclo-comercial/ciclo-comercial.module';
 import { JornadaModule } from './jornada/jornada.module';
+import { FacingModule } from './facing/facing.module';
+import { ExhibicionModule } from './exhibicion/exhibicion.module';
 
 @Module({
   imports: [
@@ -91,6 +93,8 @@ import { JornadaModule } from './jornada/jornada.module';
     TraficoModule,
     CicloComercialModule,
     JornadaModule,
+    FacingModule,
+    ExhibicionModule,
   ],
   controllers: [],
   providers: [

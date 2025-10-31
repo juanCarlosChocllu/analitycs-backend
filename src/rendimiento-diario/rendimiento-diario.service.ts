@@ -14,17 +14,14 @@ import { RendimientoDiario } from './schema/rendimientoDiarioSchema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage, Types } from 'mongoose';
 
-import { rendimientoI } from './interface/rendimiento';
 
 import { BuscadorRendimientoDiarioDto } from './dto/BuscardorRendimientoDiario';
 import { Flag } from 'src/sucursal/enums/flag.enum';
 import { PaginadorCoreDto } from 'src/core-app/dto/PaginadorCoreDto';
 import {
   calcularPaginas,
-  formaterFechaHora,
   skip,
 } from 'src/core-app/utils/coreAppUtils';
-import { VentaService } from 'src/venta/service/venta.service';
 import { VentaRendimientoDiarioService } from 'src/venta/service/ventaRendimientoDiario.service';
 import { JornadaService } from 'src/jornada/jornada.service';
 import { formatearFechaVentaStr } from './utils/rendimientoDiario';

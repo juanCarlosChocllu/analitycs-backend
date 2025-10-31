@@ -48,7 +48,7 @@ export class MetasSucursalService {
     return { status: HttpStatus.CREATED };
   }
 
-  async findAll(buscadorMetasDto: BuscadorMetasDto) {
+  async findAll(buscadorMetasDto: BuscadorMetasDto) {    
     const { f1, f2 } = formaterFechaHora(
       buscadorMetasDto.fechaInicio,
       buscadorMetasDto.fechaFin,
@@ -149,10 +149,13 @@ export class MetasSucursalService {
             },
           },
         },
+        {
+          $skip:skip(buscadorMetasDto.pagina, buscadorMetasDto.limite)
+        },
+        {
+          $limit:buscadorMetasDto.limite
+        }
       ])
-      .skip(skip(buscadorMetasDto.pagina, buscadorMetasDto.limite))
-      .limit(buscadorMetasDto.limite);
-
     return { paginas: paginas == 0 ? 1 : paginas, data: metas };
   }
 
