@@ -14,7 +14,7 @@ import { DetalleVentaDto } from '../dto/DetalleVenta.dto';
 import { filter } from 'rxjs';
 import { detallleVentaFilter } from '../utils/detalleVenta.util';
 import { FacingService } from 'src/facing/facing.service';
-import pMap from 'p-map';
+
 
 @Injectable()
 export class VentaProductoService {
@@ -29,6 +29,7 @@ export class VentaProductoService {
     private readonly facingService: FacingService,
   ) {}
 
+ 
   async reporteVentaProductosUnidad(
     buscadorVentaDto: BuscadorVentaDto,
     actual: boolean,
@@ -36,14 +37,11 @@ export class VentaProductoService {
     if (!buscadorVentaDto.rubro || buscadorVentaDto.rubro.length === 0) {
       throw new BadRequestException('Ingrese el rubro');
     }
-    const CONCURRENCY_SUCURSALES = 10;
-    const CONCURRENCY_PRODUCTOS = 20;
 
     const filtroVenta = filtradorVenta(buscadorVentaDto);
 
-    const resultados = await pMap(
-      buscadorVentaDto.sucursal,
-      async (sucursalId) => {
+    const resultados = await Promise.all(
+      buscadorVentaDto.sucursal.map(async (sucursalId) => {
         const pipeline: PipelineStage[] = [
           {
             $match: {
@@ -123,13 +121,22 @@ export class VentaProductoService {
         ];
         const [sucursalInfo, ventasAgrupadas] = await Promise.all([
           this.sucursalService.listarSucursalId(sucursalId),
-          this.venta.aggregate(pipeline, { allowDiskUse: true }),
+          this.venta.aggregate<{
+            categoria: string;
+            marca: string;
+            rubro: string;
+            marcaId: Types.ObjectId;
+            productos: Types.ObjectId[];
+            cantidadVentas: number;
+          }>(pipeline, { allowDiskUse: true }),
         ]);
+
+        
         let productosFinales: any[] = [];
+
         if (actual) {
-          productosFinales = await pMap(
-            ventasAgrupadas,
-            async (item) => {
+          productosFinales = await Promise.all(
+            ventasAgrupadas.map(async (item) => {
               const [stock, facing] = await Promise.all([
                 this.stockService.buscarStockVenta(
                   item.productos,
@@ -142,32 +149,30 @@ export class VentaProductoService {
                   buscadorVentaDto.fechaInicio,
                   buscadorVentaDto.fechaFin,
                 ),
-              ]);
-             
+              ]);            
               return {
                 rubro: item.rubro,
-                categoria: item.categoria,
+                categoria: item.categoria ? item.categoria :'SIN CATEGORIA',
                 marca: item.marca,
                 cantidadVentas: item.cantidadVentas,
                 presupuesto: 0,
-                facing,
+                facig:facing,
                 stock,
               };
-            },
-            { concurrency: CONCURRENCY_PRODUCTOS },
+            }),
           );
         } else {
           productosFinales = ventasAgrupadas;
         }
-
+      
         return {
           sucursal: sucursalInfo?.nombre,
           empresa: sucursalInfo?.empresa,
           productos: productosFinales,
         };
-      },
-      { concurrency: CONCURRENCY_SUCURSALES },
+      }),
     );
+
     return resultados;
   }
 
