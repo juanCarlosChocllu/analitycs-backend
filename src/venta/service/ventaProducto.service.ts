@@ -13,6 +13,8 @@ import { filtradorVenta } from '../utils/filtroVenta';
 import { DetalleVentaDto } from '../dto/DetalleVenta.dto';
 import { filter } from 'rxjs';
 import { detallleVentaFilter } from '../utils/detalleVenta.util';
+import { FacingService } from 'src/facing/facing.service';
+import pMap from 'p-map';
 
 @Injectable()
 export class VentaProductoService {
@@ -24,21 +26,24 @@ export class VentaProductoService {
     private readonly stockService: StockService,
     private readonly sucursalService: SucursalService,
     private readonly cotizacionService: CotizacionService,
-  ) { }
+    private readonly facingService: FacingService,
+  ) {}
+
   async reporteVentaProductosUnidad(
     buscadorVentaDto: BuscadorVentaDto,
     actual: boolean,
   ) {
-   
     if (!buscadorVentaDto.rubro || buscadorVentaDto.rubro.length === 0) {
       throw new BadRequestException('Ingrese el rubro');
     }
-   
+    const CONCURRENCY_SUCURSALES = 10;
+    const CONCURRENCY_PRODUCTOS = 20;
+
     const filtroVenta = filtradorVenta(buscadorVentaDto);
 
-    const resultados = await Promise.all(
-      buscadorVentaDto.sucursal.map(async (sucursalId) => {
-        const sucursalObjectId = new Types.ObjectId(sucursalId);
+    const resultados = await pMap(
+      buscadorVentaDto.sucursal,
+      async (sucursalId) => {
         const pipeline: PipelineStage[] = [
           {
             $match: {
@@ -89,6 +94,7 @@ export class VentaProductoService {
               'producto._id': 1,
               'marca.nombre': 1,
               'marca.categoria': 1,
+              marcaId: '$marca._id',
             },
           },
           {
@@ -100,11 +106,13 @@ export class VentaProductoService {
               },
               productos: { $addToSet: '$producto._id' },
               cantidadVentas: { $sum: '$cantidad' },
+              marcaId: { $first: '$marcaId' },
             },
           },
           {
             $project: {
               _id: 0,
+              marcaId: 1,
               categoria: '$_id.categoria',
               marca: '$_id.marca',
               rubro: '$_id.rubro',
@@ -115,33 +123,38 @@ export class VentaProductoService {
         ];
         const [sucursalInfo, ventasAgrupadas] = await Promise.all([
           this.sucursalService.listarSucursalId(sucursalId),
-          this.venta.aggregate(pipeline),
+          this.venta.aggregate(pipeline, { allowDiskUse: true }),
         ]);
-
         let productosFinales: any[] = [];
-
         if (actual) {
-          productosFinales = await Promise.all(
-            ventasAgrupadas.map(async (item) => {
-              const [stock, cot] = await Promise.all([
-                this.stockService.buscarStockVenta(item.productos, buscadorVentaDto.fechaInicio, buscadorVentaDto.fechaFin),
-                this.cotizacionService.cantidadCotizaciones(
-                  buscadorVentaDto.rubro,
+          productosFinales = await pMap(
+            ventasAgrupadas,
+            async (item) => {
+              const [stock, facing] = await Promise.all([
+                this.stockService.buscarStockVenta(
                   item.productos,
                   buscadorVentaDto.fechaInicio,
                   buscadorVentaDto.fechaFin,
-                  sucursalObjectId,
+                ),
+                this.facingService.cantidadDeFacing(
+                  item.marcaId,
+                  sucursalId,
+                  buscadorVentaDto.fechaInicio,
+                  buscadorVentaDto.fechaFin,
                 ),
               ]);
+             
               return {
                 rubro: item.rubro,
                 categoria: item.categoria,
                 marca: item.marca,
                 cantidadVentas: item.cantidadVentas,
-                cantidadCotizaciones: cot,
+                presupuesto: 0,
+                facing,
                 stock,
               };
-            }),
+            },
+            { concurrency: CONCURRENCY_PRODUCTOS },
           );
         } else {
           productosFinales = ventasAgrupadas;
@@ -152,9 +165,9 @@ export class VentaProductoService {
           empresa: sucursalInfo?.empresa,
           productos: productosFinales,
         };
-      }),
+      },
+      { concurrency: CONCURRENCY_SUCURSALES },
     );
-
     return resultados;
   }
 
@@ -261,7 +274,7 @@ export class VentaProductoService {
       {
         $match: {
           ...filter,
-          sucursal:new Types.ObjectId(sucursal)
+          sucursal: new Types.ObjectId(sucursal),
         },
       },
       {
@@ -301,26 +314,24 @@ export class VentaProductoService {
       {
         $unwind: { path: '$marca', preserveNullAndEmptyArrays: false },
       },
-      
+
       {
-        $group:{
-          _id:'$marca.nombre',
-          cantidad:{$sum:'$detalleVenta.cantidad'},
-          rubro:{$first:'$detalleVenta.rubro'}
-        }
+        $group: {
+          _id: '$marca.nombre',
+          cantidad: { $sum: '$detalleVenta.cantidad' },
+          rubro: { $first: '$detalleVenta.rubro' },
+        },
       },
       {
-        $project:{
-          _id:0,
-          marca:'$_id',
-        cantidad:1,
-        rubro:1
-        }
-      }
-
+        $project: {
+          _id: 0,
+          marca: '$_id',
+          cantidad: 1,
+          rubro: 1,
+        },
+      },
     ]);
 
-    
-    return productos
+    return productos;
   }
 }

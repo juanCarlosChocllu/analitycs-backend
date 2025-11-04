@@ -26,6 +26,7 @@ import { EmpresaModule } from 'src/empresa/empresa.module';
 
 import { RecetaModule } from 'src/receta/receta.module';
 import { JornadaModule } from 'src/jornada/jornada.module';
+import { FacingModule } from 'src/facing/facing.module';
 
 
 @Module({
@@ -44,6 +45,7 @@ import { JornadaModule } from 'src/jornada/jornada.module';
 
     CotizacionModule,
     JornadaModule,
+    FacingModule,
     MongooseModule.forFeature([
       { name: Venta.name, schema: ventaSchema },
       { name: DetalleVenta.name, schema: detalleVentaSchema },

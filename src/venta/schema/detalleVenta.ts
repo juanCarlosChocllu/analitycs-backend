@@ -22,5 +22,4 @@ export class DetalleVenta extends BaseSchema {
   cantidad: number;
 }
 export const detalleVentaSchema = SchemaFactory.createForClass(DetalleVenta);
-detalleVentaSchema.index({rubro:1})
-detalleVentaSchema.index({venta:1})
+detalleVentaSchema.index({ venta: 1, rubro: 1 });

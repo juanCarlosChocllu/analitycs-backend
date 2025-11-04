@@ -17,3 +17,4 @@ export class Facing extends BaseSchema {
   cantidad: number;
 }
 export const facingSchema = SchemaFactory.createForClass(Facing);
+facingSchema.index({marca:1,sucursal:1,fechaCreacion:1 })

@@ -29,3 +29,4 @@ export class StockHistorial extends BaseSchema {
 export const StockHistorialSchema =
   SchemaFactory.createForClass(StockHistorial);
 StockHistorialSchema.index({producto:1, fechaStock:1})
+StockHistorialSchema.index({ tipo: 1 })

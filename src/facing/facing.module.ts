@@ -17,5 +17,6 @@ import { Facing, facingSchema } from './schema/facing.schema';
     ],
   controllers: [FacingController],
   providers: [FacingService],
+    exports: [FacingService],
 })
 export class FacingModule {}

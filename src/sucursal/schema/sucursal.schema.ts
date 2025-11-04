@@ -11,3 +11,4 @@ export class Sucursal {
 
 export const SuscursalSchema =
   SchemaFactory.createForClass(Sucursal);
+SuscursalSchema.index({empresa:1})
