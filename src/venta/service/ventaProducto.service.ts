@@ -156,15 +156,14 @@ export class VentaProductoService {
                 marca: item.marca,
                 cantidadVentas: item.cantidadVentas,
                 presupuesto: 0,
-                facig:facing,
+                facing:facing,
                 stock,
               };
             }),
           );
         } else {
           productosFinales = ventasAgrupadas;
-        }
-      
+        }        
         return {
           sucursal: sucursalInfo?.nombre,
           empresa: sucursalInfo?.empresa,

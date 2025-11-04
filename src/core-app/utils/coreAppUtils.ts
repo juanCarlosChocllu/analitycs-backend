@@ -1,4 +1,5 @@
  import { eachDayOfInterval, isSunday } from 'date-fns';
+ import * as path from 'path';
  export function  horaUtc(fecha: string) {
     const fechaDate = new Date(fecha);
     fechaDate.setHours(fechaDate.getHours() - 4);
@@ -80,3 +81,7 @@ export function tasaConversion(totalConvertidos:number,totalVisitantes:number ):
 
 
 
+  export function rutaArchivoUpload(archivo: string) {
+    let ruta: string = path.join(__dirname, `../../../upload/${archivo}`);
+    return ruta;
+  }

@@ -101,6 +101,7 @@ export class FacingService {
         },
       },
     ]);
+
     return data[0]?.cantidad || 0;
   }
 }
