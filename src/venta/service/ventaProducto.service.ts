@@ -152,7 +152,7 @@ export class VentaProductoService {
               ]);            
               return {
                 rubro: item.rubro,
-                categoria: item.categoria ? item.categoria :'SIN CATEGORIA',
+                categoria: item.categoria,
                 marca: item.marca,
                 cantidadVentas: item.cantidadVentas,
                 presupuesto: 0,
