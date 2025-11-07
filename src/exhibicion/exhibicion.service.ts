@@ -22,5 +22,11 @@ export class ExhibicionService {
     return this.exhibicion.find({flag:flagEnum.nuevo});
   }
 
-  
+  async gurardarExhibicion(nombre:string) {
+    const exhibicion = await this.exhibicion.findOne({nombre:nombre})
+    if(!exhibicion){
+      return this.exhibicion.create({nombre:nombre})
+    }
+    return exhibicion
+  }
 }
