@@ -40,8 +40,53 @@ export class AsesorService {
     }
     return detalle;
   }
-  listar() {    
-    return this.asesor.find({tieneUsuario:{$ne:true}});
+  async listar() {    
+    const asesor = await this.asesor.aggregate([
+      {
+        $match:{
+          tieneUsuario:{$ne:true}
+        }
+      },
+      {
+        $lookup:{
+          from:'DetalleAsesor',
+          foreignField:'asesor',
+          localField:'_id',
+          as:'detalleAsesor'
+        }
+      },
+      {
+        $unwind:{path:'$detalleAsesor', preserveNullAndEmptyArrays:false} 
+      },
+        {
+        $lookup:{
+          from:'Sucursal',
+          foreignField:'_id',
+          localField:'detalleAsesor.sucursal',
+          as:'sucursal'
+        }
+      },
+        {
+        $unwind:{path:'$sucursal', preserveNullAndEmptyArrays:false} 
+      },
+      {
+        $group:{
+          _id:'$_id',
+          nombre:{$first:'$nombre'},
+          sucursal:{$push:{ idSucursal:'$sucursal._id', idDetalle:'$detalleAsesor._id',nombre:'$sucursal.nombre' }}
+        }
+      },
+      {
+        $project:{
+          _id:1,
+          nombre:1,
+          sucursal:1,
+        }
+      }
+
+    ])
+
+    return asesor
   }
 
   async listarAsesorPorSucursalDiasTrabajo(

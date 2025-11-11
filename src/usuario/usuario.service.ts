@@ -17,6 +17,9 @@ import { Flag } from 'src/sucursal/enums/flag.enum';
 import { RolE } from './enum/rol';
 import { ResetearContrasena } from './dto/resetar-contrasena.dto';
 import { AsesorService } from 'src/asesor/asesor.service';
+import { rutaArchivoUpload } from 'src/core-app/utils/coreAppUtils';
+import * as ExcelJS from 'exceljs';
+import { flagEnum } from 'src/core-app/enum/coreEnum';
 @Injectable()
 export class UsuarioService {
   private readonly opcionesArgon2: argon2.Options = {
@@ -281,5 +284,44 @@ export class UsuarioService {
       status: HttpStatus.OK,
       message: 'La contraseña se ha cambiado con éxito.',
     };
+  }
+
+  async asesorExcel(archivo: string) {
+    const ruta = rutaArchivoUpload(archivo);
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(ruta);
+    const hoja = workbook.worksheets[0];
+    hoja.eachRow(async (fila, _) => {
+      const idAsesor = fila.getCell(1).value?.toLocaleString();
+      const nombre = fila.getCell(2).value;
+      const apellidos = fila.getCell(3).value;
+      const username = fila.getCell(4).value;
+      const password = fila.getCell(5).value?.toLocaleString();
+      const idDetalleAsesor = fila.getCell(6).value?.toLocaleString();
+      const rol = fila.getCell(8).value;
+
+      if (rol == 'GESTOR' || (rol == 'ASESOR' && password)) {
+        const usuario = await this.usuario.findOne({
+          username: username,
+          flag: flagEnum.nuevo,
+        });
+
+        if (!usuario) {
+          const hash = await argon2.hash(String(password), this.opcionesArgon2);
+          const asesor = new Types.ObjectId(idAsesor);
+          await this.usuario.create({
+            nombre: nombre,
+            apellidos: apellidos,
+            asesor: asesor,
+            detalleAsesor: new Types.ObjectId(idDetalleAsesor),
+            rol: rol,
+            username: username,
+            password: hash,
+          });
+
+          await this.asesorService.marcarConAsesorAsesor(asesor, true);
+        }
+      }
+    });
   }
 }

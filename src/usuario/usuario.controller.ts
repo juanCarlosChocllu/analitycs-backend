@@ -7,6 +7,9 @@ import {
   Param,
   Delete,
   Req,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -19,6 +22,8 @@ import { ResetearContrasena } from './dto/resetar-contrasena.dto';
 import { RolGuard } from 'src/core-app/guards/Rol.Guard';
 import { ROLE } from 'src/core-app/decorators/appDecorators';
 import { RolesE } from 'src/core-app/enum/coreEnum';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from 'src/core-app/multer/multerConfig';
 
 @Controller('usuarios')
 export class UsuarioController {
@@ -27,6 +32,21 @@ export class UsuarioController {
   @Post('create')
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.usuarioService.create(createUsuarioDto);
+  }
+
+   @ROLE([RolesE.ADMINISTRADOR])
+  @Post('asesorExcel')
+    @UseInterceptors(FileInterceptor('file', multerConfig))
+  asesorExcel(@UploadedFile() file: Express.Multer.File) {
+   try {
+      if (!file) {
+        throw new BadRequestException();
+      }
+      return this.usuarioService.asesorExcel(file.filename);
+    } catch (error) {
+      throw new BadRequestException();
+    }
+  
   }
   @ROLE([RolesE.ADMINISTRADOR, RolesE.ASESOR, RolesE.GESTOR])
   @Get('perfil')
