@@ -138,7 +138,8 @@ export class UsuarioService {
         },
       },
     ]);
-
+  
+    
     return usuario;
   }
 

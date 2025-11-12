@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 
 import { InjectModel } from '@nestjs/mongoose';
 import { Asesor } from './schema/asesor.schema';
@@ -222,6 +222,7 @@ export class AsesorService {
     }
   }
   async listarSucursalesAsesores(asesor: Types.ObjectId) {
+    
     const sucursales = await this.detalleAsesor.aggregate([
       {
         $match: {
@@ -244,7 +245,6 @@ export class AsesorService {
         },
       },
     ]);
-
     return sucursales;
   }
 
@@ -298,5 +298,16 @@ export class AsesorService {
         { tieneUsuario: tieneUsuario },
       );
     }
+  }
+
+  async nuevoDetalle(asesor :Types.ObjectId , sucursal:Types.ObjectId){
+    console.log(asesor, sucursal);
+    
+    const detalle = await this.detalleAsesor.findOne({sucursal:new Types.ObjectId(sucursal), asesor:new Types.ObjectId(asesor)})
+    if(!detalle){
+        return this.detalleAsesor.create({sucursal:new Types.ObjectId(sucursal), asesor:new Types.ObjectId(asesor)})
+    }
+    throw new ConflictException('Este asesor ya tiene esta sucursal asignada')
+    
   }
 }
