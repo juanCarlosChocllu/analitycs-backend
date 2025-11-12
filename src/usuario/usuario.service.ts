@@ -44,13 +44,14 @@ export class UsuarioService {
     }
     createUsuarioDto.password = await argon2.hash(
       createUsuarioDto.password,
-      this.opcionesArgon2,
+      this.opcionesArgon2
     );
     if (createUsuarioDto.rol != RolE.ADMINISTRADOR) {
       await this.asesorService.marcarConAsesorAsesor(
         createUsuarioDto.asesor,
         true,
       );
+      createUsuarioDto.detalleAsesor =  new Types.ObjectId(createUsuarioDto.detalleAsesor)
       createUsuarioDto.asesor = new Types.ObjectId(createUsuarioDto.asesor);
     }
     await this.usuario.create(createUsuarioDto);

@@ -32,4 +32,8 @@ export class CreateUsuarioDto {
     @IsMongoId()
     asesor:Types.ObjectId
 
+    @IsOptional()
+    @IsMongoId()
+    detalleAsesor:Types.ObjectId
+
 }
