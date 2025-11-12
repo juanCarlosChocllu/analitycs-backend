@@ -301,8 +301,6 @@ export class AsesorService {
   }
 
   async nuevoDetalle(asesor :Types.ObjectId , sucursal:Types.ObjectId){
-    console.log(asesor, sucursal);
-    
     const detalle = await this.detalleAsesor.findOne({sucursal:new Types.ObjectId(sucursal), asesor:new Types.ObjectId(asesor)})
     if(!detalle){
         return this.detalleAsesor.create({sucursal:new Types.ObjectId(sucursal), asesor:new Types.ObjectId(asesor)})
