@@ -23,7 +23,7 @@ export class ProvidersController {
   descargarStockProductos(@Body() descargarProviderDto: DescargarProviderDto) {
     return this.providersService.descargarStockProductos(descargarProviderDto);
   }
-
+  
   @Post('mia/cotizacion')
   descargarCotizacion(@Body() descargarProviderDto: DescargarProviderDto) {
     return this.providersService.descargarCotizacion(descargarProviderDto);

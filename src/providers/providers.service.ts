@@ -705,5 +705,28 @@ export class ProvidersService {
     await this.descargarCotizacion(fecha);
   }
 
+
+   @Cron(CronExpression.EVERY_DAY_AT_6AM)
+  async descargarStockCron() {
+    const date = new Date();
+
+    const fechaAyer = new Date(date);
+    fechaAyer.setDate(date.getDate() - 1);
+
+    const año = fechaAyer.getFullYear();
+    const mes = (fechaAyer.getMonth() + 1).toString().padStart(2, '0');
+    const dia = fechaAyer.getDate().toString().padStart(2, '0');
+
+    const fecha: DescargarProviderDto = {
+      fechaInicio: `${año}-${mes}-${dia}`,
+      fechaFin: `${año}-${mes}-${dia}`,
+    };
+    this.logger.debug('Iniciando la descarga de stock');
+    
+    await this.descargarStockProductos(fecha)
+    
+  
+  }
+
  
 }
