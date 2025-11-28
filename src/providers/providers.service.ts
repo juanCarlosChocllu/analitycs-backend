@@ -67,7 +67,7 @@ export class ProvidersService {
     private readonly stockService: StockService,
     private readonly cotizacionService: CotizacionService,
     private readonly logService: LogService,
-       private readonly precioService: PrecioService,
+    private readonly precioService: PrecioService,
   ) {}
   async descargarVentasMia(createProviderDto: DescargarProviderDto) {
     try {
@@ -125,7 +125,7 @@ export class ProvidersService {
           `${this.appConfigService.apiMia}/api/ventas/anuladas`,
           data,
         ),
-      );     
+      );
       return ventas.data;
     } catch (error) {
       throw error;
@@ -248,7 +248,7 @@ export class ProvidersService {
             this.asesorService.guardarAsesor(data.nombre_vendedor),
             this.tipoVentaService.guardarTipoVenta(data.tipoVenta),
             this.medicoService.guardarMedico(data.medico),
-            this.precioService.guardarTipoPrecio(data.precio.toUpperCase())
+            this.precioService.guardarTipoPrecio(data.precio.toUpperCase()),
           ]);
           const detalleMedico = await this.medicoService.guardarDetalleMedico(
             medico._id,
@@ -407,18 +407,13 @@ export class ProvidersService {
     await this.ventaService.guardarDetalleVenta(detalle);
   }
 
-  
-
   async descargarStockProductos(descargarProviderDto: DescargarProviderDto) {
     const ventas =
-      await this.ventaService.buscarProductoDeVenta(descargarProviderDto);  
-      const codigosUnicos = [...new Set(ventas.map(item => item.codigoMia))];   
-      const stock = await this.descargarStockMia(codigosUnicos);
-      await this.stockService.guardarStockMia(ventas, stock);
+      await this.ventaService.buscarProductoDeVenta(descargarProviderDto);
+    const codigosUnicos = [...new Set(ventas.map((item) => item.codigoMia))];
+    const stock = await this.descargarStockMia(codigosUnicos);
+    await this.stockService.guardarStockMia(ventas, stock);
   }
-
-
-
 
   async descargarCotizacion(descargarProviderDto: DescargarProviderDto) {
     const cotizaciones =
@@ -446,7 +441,7 @@ export class ProvidersService {
         total1: cot.total1 ? cot.total1 : 0,
         total2: cot.total2 ? cot.total2 : 0,
         noCompra: cot.motivoNoCompra,
-         ...(cot.id_venta && { id_venta: cot.id_venta }),
+        ...(cot.id_venta && { id_venta: cot.id_venta }),
         detalleMedico: detalleMedico._id,
         ...(cot.id_venta && { id_venta: cot.id_venta }),
         ...(cot.recetaVenta && { recetaVenta: cot.recetaVenta }),
@@ -612,6 +607,8 @@ export class ProvidersService {
     this.logger.debug('Iniciando las finalizaciones');
     await this.finalizarVentas(fecha);
   }
+
+  
   @Cron(CronExpression.EVERY_DAY_AT_7AM)
   async anularVentasCron() {
     try {
@@ -636,7 +633,6 @@ export class ProvidersService {
 
       this.logger.debug('Iniciando la anulaciones');
       const response = await this.anularVentas(fecha);
-
     } catch (error) {
       console.log(error);
     }
@@ -661,7 +657,6 @@ export class ProvidersService {
 
       this.logger.debug('Iniciando la descarga recetas');
       const response = await this.descargarReceta(fecha);
-  
     } catch (error) {
       console.log(error);
     }
@@ -705,8 +700,7 @@ export class ProvidersService {
     await this.descargarCotizacion(fecha);
   }
 
-
-   @Cron(CronExpression.EVERY_DAY_AT_6AM)
+  @Cron(CronExpression.EVERY_DAY_AT_6AM)
   async descargarStockCron() {
     const date = new Date();
 
@@ -722,11 +716,7 @@ export class ProvidersService {
       fechaFin: `${año}-${mes}-${dia}`,
     };
     this.logger.debug('Iniciando la descarga de stock');
-    
-    await this.descargarStockProductos(fecha)
-    
-  
-  }
 
- 
+    await this.descargarStockProductos(fecha);
+  }
 }

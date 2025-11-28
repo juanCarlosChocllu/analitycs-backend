@@ -22,9 +22,7 @@ export class StockService {
   async guardarStockMia(ventas: CodigoMiaProductoI[], stocks: StockMia[]) {
     const date = new Date();
     date.setHours(0, 0, 0, 0);
-    date.setDate(date.getDate() - 1);
-    console.log(date);
-    
+    date.setDate(date.getDate() - 1); 
     for (const v of ventas) {
       for (const dataMia of stocks) {
         if (v.codigoMia === dataMia.codigoMiaProducto) {
